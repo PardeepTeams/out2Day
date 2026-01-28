@@ -1,0 +1,184 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../api/api_service.dart';
+import '../api/storage_helper.dart';
+import '../models/dynamic_page_model.dart';
+import '../models/user_model.dart';
+import '../routes/app_routes.dart';
+import '../utils/app_strings.dart';
+import '../utils/common_styles.dart';
+import '../utils/my_progress_bar.dart';
+import '../widgets/dialog_helper.dart';
+
+class ProfileSettingsController extends GetxController {
+  var profileImageUrl = "".obs;
+  RxString userName = "Test User".obs;
+  RxString userAge = "22".obs;
+
+  var notificationsEnabled = true.obs;
+
+  var isSettingsLoading = false.obs;
+  var dynamicPages = <DynamicPageModel>[].obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    getDynamicPages();
+   // loadUserFromStorage();
+  }
+
+  Future<void> getDynamicPages() async {
+    isSettingsLoading.value = true;
+    try {
+      var pages = await ApiService().fetchAllPages();
+      dynamicPages.assignAll(pages);
+    } catch (e) {
+      print("Error in Controller: $e");
+    } finally {
+      isSettingsLoading.value = false;
+    }
+  }
+
+
+  void loadUserFromStorage() {
+    print("isEdit");
+    UserData? user = StorageProvider.getUserData();
+
+    if (user == null) return;
+
+    print("firstName ${user.firstName}");
+
+    /// 🧑 Name
+    userName.value =
+        "${user.firstName ?? ""} ${user.lastName ?? ""}".trim();
+
+    /// 🎂 Age (DOB se)
+    if (user.dob != null && user.dob!.isNotEmpty) {
+      userAge.value = calculateAge(user.dob!).toString();
+    }
+
+    /// 🖼 Profile Image (API URL)
+    if (user.profile != null && user.profile!.isNotEmpty) {
+      profileImageUrl.value =
+          ApiService.imageBaseUrl + user.profile!;
+    }
+  }
+
+
+
+  /// Toggle notifications
+  void toggleNotifications(bool value) {
+    notificationsEnabled.value = value;
+  }
+  /// Perform actions
+  void blockUsers() => Get.toNamed(AppRoutes.blockedUser,
+      arguments: true)?.then((value) {
+    // controller.refreshHome();
+  });
+  void deleteAccount(BuildContext context) => DialogHelper.showIosDialog(
+    title: AppStrings.deleteAccount,
+    message: AppStrings.deleteAccMsg,
+    confirmText: AppStrings.delete,
+    isDeleteAction: true,
+    onConfirm: () async {
+      Get.offAllNamed(AppRoutes.login);
+   /*   try{
+        MyProgressBar.showLoadingDialog(context: context);
+        int status = await ApiService().removeAccountApi();
+        if (status == 1) {
+          MyProgressBar.hideLoadingDialog(context: context);
+          Get.offAllNamed(AppRoutes.login);
+        } else if (status == 0) {
+          MyProgressBar.hideLoadingDialog(context: context);
+        }
+      }catch(e){
+        MyProgressBar.hideLoadingDialog(context: context);
+        Get.snackbar("Error", e.toString());
+      }*/
+    },
+  );
+  void businessListing() => Get.toNamed(AppRoutes.business,
+      arguments: true)?.then((value) {
+    // controller.refreshHome();
+  });
+  void events() =>  Get.toNamed(AppRoutes.events,
+      arguments: true)?.then((value) {
+    // controller.refreshHome();
+  });
+  void faqs() =>   Get.toNamed(AppRoutes.faqs,
+      arguments: true)?.then((value) {
+    // controller.refreshHome();
+  });
+
+  Future<void> launchInBrowser(String url) async {
+    final Uri _url = Uri.parse(url);
+    try {
+      if (!await launchUrl(
+        _url,
+        mode: LaunchMode.externalApplication, // Nave tab vich kholn layi
+      )) {
+        throw Exception('Could not launch $_url');
+      }
+    } catch (e) {
+      Get.snackbar("Error", "URL open nahi ho saki");
+    }
+  }
+  void logout(BuildContext context) => DialogHelper.showIosDialog(
+    title: AppStrings.logout,
+    message: AppStrings.logoutMsg,
+    confirmText: AppStrings.logout,
+    onConfirm: () async {
+      Get.offAllNamed(AppRoutes.login);
+   /*   try{
+        MyProgressBar.showLoadingDialog(context: context);
+        int status = await ApiService().logoutApi();
+        if (status == 1) {
+          MyProgressBar.hideLoadingDialog(context: context);
+          Get.offAllNamed(AppRoutes.login);
+        } else if (status == 0) {
+          MyProgressBar.hideLoadingDialog(context: context);
+        }
+      }catch(e){
+        MyProgressBar.hideLoadingDialog(context: context);
+        Get.snackbar("Error", e.toString());
+      }*/
+    },
+  );
+  void privacyPolicy() {
+    if(kIsWeb){
+      launchInBrowser("https://out2day.brickandwallsinc.com/privacy-policies");
+    }else{
+      Get.toNamed(AppRoutes.privacyPolicy,
+          arguments: true)?.then((value) {
+        // controller.refreshHome();
+      });
+    }
+
+  }
+  void termsAndConditions(){
+    if(kIsWeb){
+      launchInBrowser("https://out2day.brickandwallsinc.com/terms-and-condition");
+    }else{
+      Get.toNamed(AppRoutes.privacyPolicy,
+          arguments: false)?.then((value) {
+        // controller.refreshHome();
+      });
+    }
+
+  }
+
+  void safety() => Get.toNamed(AppRoutes.safetyScreen,
+      arguments: true)?.then((value) {
+    // controller.refreshHome();
+  });
+
+  @override
+  void onClose() {
+    super.onClose();
+  }
+}
