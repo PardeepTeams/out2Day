@@ -40,9 +40,11 @@ class ApiService {
       throw "Please check your internet connection.";
     }
     try {
-      final response = await http.get(Uri.parse("$baseUrl/all-ethnicities"));
+      final response = await http.get(Uri.parse("$baseUrl/all-ethnicities"))
+          .timeout(const Duration(seconds: 10));;
 
       if (response.statusCode == 200) {
+        print("EthnicitiesData  ${response.body}" );
         return EthnicityModel.fromJson(json.decode(response.body));
       } else {
         // Backend error message handle karna
@@ -58,9 +60,12 @@ class ApiService {
       throw "Please check your internet connection.";
     }
     try {
-      final response = await http.get(Uri.parse("$baseUrl/all-hobbies"));
+      final response = await http
+          .get(Uri.parse("$baseUrl/all-hobbies"))
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
+        print("hobbiesData  ${response.body}" );
         return HobbyModel.fromJson(json.decode(response.body));
       } else {
         // Backend error message handle karna
@@ -79,9 +84,11 @@ class ApiService {
     }
 
     try {
-      final response = await http.get(Uri.parse("$baseUrl/all-professions"));
+      final response = await http.get(Uri.parse("$baseUrl/all-professions"))
+          .timeout(const Duration(seconds: 10));;
 
       if (response.statusCode == 200) {
+        print("ProfessionsData  ${response.body}" );
         return ProfessionModel.fromJson(json.decode(response.body));
       } else {
         var errorData = json.decode(response.body);
@@ -95,7 +102,8 @@ class ApiService {
 
   Future<bool> createProfileApi({
     required Map<String, String> body,
-    File? profileImage
+    File? profileImage,
+    Uint8List? webImageBytes,
   }) async {
     // 1. Check Internet Connection
     if (!await isConnected()) {
@@ -114,7 +122,15 @@ class ApiService {
       request.fields.addAll(body);
 
       // 4. Add Main Profile Image
-      if (profileImage != null) {
+      if (kIsWeb && webImageBytes != null) {
+        // ✅ Web ke liye bytes use karein
+        request.files.add(http.MultipartFile.fromBytes(
+          'profile',
+          webImageBytes,
+          filename: 'profile_image.jpg', // Web par filename dena zaroori hai
+        ));
+      } else if (profileImage != null) {
+        // 📱 Mobile ke liye path use karein
         request.files.add(await http.MultipartFile.fromPath('profile', profileImage.path));
       }
 
@@ -156,6 +172,7 @@ class ApiService {
   Future<bool> updateProfileApi({
     required Map<String, String> body,
     File? profileImage,
+    Uint8List? webImageBytes,
   }) async {
     if (!await isConnected()) {
       throw Exception("Please check your internet connection.");
@@ -180,11 +197,23 @@ class ApiService {
 
       request.fields.addAll(body);
 
-      if (profileImage != null) {
+      if (kIsWeb && webImageBytes != null) {
+        // ✅ Web ke liye bytes use karein
+        request.files.add(http.MultipartFile.fromBytes(
+          'profile',
+          webImageBytes,
+          filename: 'profile_image.jpg', // Web par filename dena zaroori hai
+        ));
+      } else if (profileImage != null) {
+        // 📱 Mobile ke liye path use karein
+        request.files.add(await http.MultipartFile.fromPath('profile', profileImage.path));
+      }
+
+    /*  if (profileImage != null) {
         request.files.add(
           await http.MultipartFile.fromPath('profile', profileImage.path),
         );
-      }
+      }*/
 
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
@@ -1195,6 +1224,21 @@ class ApiService {
       print("fetchAllPages API Error: $e");
       rethrow;
     }
+  }
+
+  Future<String?> fetchApiVersion() async {
+    try {
+      final response = await http.get(Uri.parse("$baseUrl/api-version"));
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        if (data['status'] == 1) {
+          return data['version'].toString();
+        }
+      }
+    } catch (e) {
+      print("API Version Error: $e");
+    }
+    return null;
   }
 
 }

@@ -100,7 +100,7 @@ class SwipeCardScreen extends StatelessWidget {
   Widget _buildProfileCard(UserData profile) {
     return InkWell(
       onTap: (){
-        Get.toNamed(AppRoutes.userProfileDetail,arguments: {'id': profile.id, "isMy":false})?.then((value) {
+        Get.toNamed(AppRoutes.ewProfileDetail,arguments: {'id': profile.id, "isMy":false})?.then((value) {
          // controller.refreshHome();
         });
       },
@@ -208,7 +208,7 @@ class SwipeCardScreen extends StatelessWidget {
   Widget _userCard(SwipeController controller,UserData user,int index) {
     return InkWell(
       onTap: (){
-        Get.toNamed(AppRoutes.userProfileDetail,arguments: {'id': user.id,"isMy":false})?.then((value) {
+        Get.toNamed(AppRoutes.ewProfileDetail,arguments: {'id': user.id,"isMy":false})?.then((value) {
           // controller.refreshHome();
         });
       },

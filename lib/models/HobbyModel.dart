@@ -13,6 +13,16 @@ class HobbyModel {
       });
     }
   }
+
+  // ✅ Manual toJson added
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['status'] = status;
+    if (hobbies != null) {
+      data['hobbies'] = hobbies!.map((v) => v.toJson()).toList();
+    }
+    return data;
+  }
 }
 
 class Hobby {
@@ -24,5 +34,13 @@ class Hobby {
   Hobby.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     name = json['name'];
+  }
+
+  // ✅ Manual toJson added
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    return data;
   }
 }

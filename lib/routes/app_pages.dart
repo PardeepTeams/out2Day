@@ -17,6 +17,7 @@ import '../views/notifications_screen.dart';
 import '../views/otp_screen.dart';
 import '../views/safety_screen.dart';
 import '../views/splash_screen.dart';
+import '../views/user_profile_details_screen.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -45,7 +46,7 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.userProfileDetail,
-      page: () =>  ProfileDetailScreen(),
+      page: () =>  UserProfileDetailScreen(),
     ),
     GetPage(
       name: AppRoutes.chatMessages,
@@ -82,6 +83,11 @@ class AppPages {
     GetPage(
       name: AppRoutes.safetyScreen,
       page: () =>  SafeDatingScreen(),
+    ),
+
+    GetPage(
+      name: AppRoutes.ewProfileDetail,
+      page: () =>  UserProfileDetailScreen(),
     ),
 
   ];

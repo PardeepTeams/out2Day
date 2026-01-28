@@ -65,11 +65,10 @@ class OtpController extends GetxController {
   /*  if (otpCode.length < 6) {
       showCommonSnackbar(title: AppStrings.errorText, message: AppStrings.enterOTP);
       return;
-    }*/
+    }
 
     isLoading.value = false;
-  //  MyProgressBar.showLoadingDialog(context: context);
-   /* try {
+    try {
       MyProgressBar.showLoadingDialog(context: context);
       final credential = PhoneAuthProvider.credential(
         verificationId: verificationId,

@@ -153,6 +153,7 @@ class ProfileCreationScreen extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: 48,
+        padding: EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
           color: isSelected ? MyColors.baseColor : MyColors.white,
           border: Border.all(color: MyColors.borderColor, width: 1.5),
@@ -214,7 +215,7 @@ class ProfileCreationScreen extends StatelessWidget {
         commonTextFieldSmallGap(),
 
         // ✅ FIX: Row nu Container naal wrap karo aur width duso
-        SizedBox(
+       /* SizedBox(
           width: screenWidth,
           child: Obx(() {
             final preferenceList = controller.availablePreferences;
@@ -249,6 +250,34 @@ class ProfileCreationScreen extends StatelessWidget {
                         controller.togglePreference(value); // 🔥 lowercase only
                       },
                     ),
+                  ),
+                );
+              }).toList(),
+            );
+          }),
+        ),*/
+
+
+        SizedBox(
+          width: screenWidth,
+          child: Obx(() {
+            final preferenceList = controller.availablePreferences;
+
+            return Column( // 👈 Column use kiya vertical list ke liye
+              children: preferenceList.asMap().entries.map((entry) {
+                final preference = entry.value;
+                final value = preference.toLowerCase();
+                final isSelected = controller.selectedPreferences.contains(value);
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0), // Items ke beech ka gap
+                  child: customPreferenceChip( // 👈 Naya chip design function
+                    preference,
+                    isSelected,
+                        () {
+                      dismissKeyboard(context);
+                      controller.togglePreference(value);
+                    },
                   ),
                 );
               }).toList(),
@@ -784,35 +813,21 @@ class ProfileCreationScreen extends StatelessWidget {
         ),
         commonTextFieldSmallGap(),
         Obx(
-          () => Row(
-            children: [
-              Expanded(
-                child: _genderOption(
-                  AppStrings.male,
-                  Icons.male,
-                  controller,
-                  0,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _genderOption(
-                  AppStrings.female,
-                  Icons.female,
-                  controller,
-                  1,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _genderOption(
-                  AppStrings.other,
-                  Icons.transgender,
-                  controller,
-                  2,
-                ),
-              ),
-            ],
+              () => SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(), // Smooth scrolling ke liye
+            child: Row(
+              children: [
+                _genderOption(AppStrings.male, Icons.male, controller, 0),
+                const SizedBox(width: 10),
+                _genderOption(AppStrings.female, Icons.female, controller, 1),
+                const SizedBox(width: 10),
+                _genderOption(AppStrings.other, Icons.transgender, controller, 2),
+                const SizedBox(width: 10),
+                // 4th Item Example
+                _genderOption(AppStrings.notSay, Icons.person_off, controller, 3),
+              ],
+            ),
           ),
         ),
         commonTextFieldLargeGap(),
@@ -825,6 +840,58 @@ class ProfileCreationScreen extends StatelessWidget {
         ),
         commonButtonGap(),
       ],
+    );
+  }
+
+
+
+  Widget customPreferenceChip(String label, bool isSelected, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? /*MyColors.baseColor.withOpacity(0.05)*/ MyColors.white: MyColors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? MyColors.borderColor : MyColors.borderColor,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween, // 👈 Text left, Icon right
+          children: [
+            Text(
+              label , // Image jaisa text
+              style: TextStyle(
+                fontSize: 14,
+                fontFamily: "regular",
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: MyColors.black,
+              ),
+            ),
+            // Right side Checkbox/Icon logic
+            Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                shape: BoxShape.rectangle, // Image mein square-rounded hai
+                borderRadius: BorderRadius.circular(6),
+                color: isSelected ? MyColors.baseColor : Colors.transparent,
+                border: Border.all(
+                  color: isSelected ? MyColors.baseColor : Colors.grey.shade400,
+                  width: 2,
+                ),
+              ),
+              child: Icon(
+                Icons.check,
+                size: 16,
+                color: isSelected ? Colors.white : Colors.transparent,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

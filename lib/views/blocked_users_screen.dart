@@ -111,7 +111,7 @@ class BlockedUsersScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                mediumText("${user.firstName??""} ${user.lastName??""}", null),
+                mediumText("${user.firstName??""}", null),
                 const SizedBox(height: 4),
                 regularText("${calculateAge(user.dob!) }years"),
               ],

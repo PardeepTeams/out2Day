@@ -10,6 +10,10 @@ class StorageProvider {
   static const String keyToken = "token";
   static const String keyUserData = "user_data";
   static const String keyIsLogin = "is_login";
+  static const String keyHobbies = "hobbies";
+  static const String keyEthnicities = "ethnicities";
+  static const String keyProfessions = "professions";
+  static const String _versionKey = "app_api_version";
 
   /// --- SAVE DATA ---
   static void saveAuthData({required String token, required UserData userData}) {
@@ -38,5 +42,33 @@ class StorageProvider {
   /// --- LOGOUT ---
   static void clearStorage() {
     box.erase();
+  }
+
+  static void saveString(String key, String value) {
+    GetStorage().write(key, value);
+  }
+
+  static String? getString(String key) {
+    return GetStorage().read(key);
+  }
+
+  static void saveApiVersion(String version) {
+    GetStorage().write(_versionKey, version);
+  }
+
+  static String getApiVersion() {
+    return GetStorage().read(_versionKey) ?? "1";
+  }
+// Generic Write
+  static void write(String key, dynamic value) {
+    GetStorage().write(key, value);
+  }
+
+  // Generic Read
+  static dynamic read(String key) {
+    return GetStorage().read(key);
+  }
+  static void remove(String key) {
+    GetStorage().remove(key);
   }
 }

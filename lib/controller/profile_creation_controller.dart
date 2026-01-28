@@ -50,7 +50,7 @@ class ProfileCreationController extends GetxController {
   bool isEdit = false;
   RxInt currentStep = 0.obs;
 
-  final availablePreferences = [AppStrings.male, AppStrings.female, AppStrings.other];
+  final availablePreferences = [AppStrings.maleIntrest, AppStrings.femaleIntrest, AppStrings.everyoneIntrest];
   RxString selectedProfession = "".obs;
   RxString selectedDrinking = "".obs;
   RxString selectedSmoking = "".obs;
@@ -92,8 +92,8 @@ class ProfileCreationController extends GetxController {
     }
   }
   void nextStep() {
-/*    if(currentStep == 0){
-      if(profileImage.value == null && profileImageUrl.isEmpty){
+   /* if(currentStep == 0){
+      if(profileImage.value == null && webImage.value == null && profileImageUrl.isEmpty){
         showCommonSnackbar(title: AppStrings.photoReqTitle, message: AppStrings.photoReqMsg);
         return;
       }
@@ -114,31 +114,15 @@ class ProfileCreationController extends GetxController {
         showCommonSnackbar(title: AppStrings.dobReqTitle, message: AppStrings.dobReqMsg);
         return;
       }
-
+      if (aboutController.text.trim().isEmpty) {
+        showCommonSnackbar(title: AppStrings.aboutReqTitle, message: AppStrings.aboutReqMsg);
+        return;
+      };
 
     }
     if(currentStep ==1){
       if (locationController.text.trim().isEmpty) {
         showCommonSnackbar(title: AppStrings.locationReqTitle, message: AppStrings.locationReqMsg);
-        return;
-      }
-
-      if(selectedHobbies.isEmpty){
-        showCommonSnackbar(title: AppStrings.hobbiesReqTitle, message: AppStrings.hobbiesReqMsg);
-        return;
-      }
-
-      if (selectedHobbies.value == "Other" &&
-          otherHobbyController.text.trim().isEmpty) {
-        showCommonSnackbar(
-          title: AppStrings.hobbiesReqMsg,
-          message: AppStrings.hobbiesReqMsg,
-        );
-        return;
-      }
-
-      if (selectedPreferences.isEmpty) {
-        showCommonSnackbar(title: AppStrings.interestReqTitle, message: AppStrings.interestReqMsg);
         return;
       }
 
@@ -311,15 +295,157 @@ class ProfileCreationController extends GetxController {
 
   Future<void> getAllData() async {
     // Parallel execution taaki time bache
-    await Future.wait([
+  /*  await Future.wait([
       getEthnicities(),
       getProfessions(),
       getHobbies(),
-    ]);
+    ]);*/
+
+    try {
+      await Future.wait([
+        getEthnicities(),
+        getProfessions(),
+        getHobbies(),
+      ]);
+
+      // 2. Agar teeno bina error ke khatam ho gayi, tab version update karein
+      _finalizeVersionUpdate();
+
+    } catch (e) {
+      print("Ek ya zyada API fail hui, version update nahi hoga: $e");
+    }
+  }
+
+  void _finalizeVersionUpdate() {
+    bool needsRefresh = StorageProvider.read("needs_data_refresh") ?? false;
+    String? tempVersion = StorageProvider.read("temp_server_version");
+
+    if (needsRefresh && tempVersion != null) {
+      // ✅ Ab data successfully naya aa chuka hai, toh version update kar do
+      StorageProvider.saveApiVersion(tempVersion);
+      StorageProvider.write("needs_data_refresh", false);
+      StorageProvider.remove("temp_server_version");
+      print("DEBUG: All data updated. Version now synced to $tempVersion");
+    }
+  }
+
+  // --- Updated getHobbies with Version & Fallback ---
+  Future<void> getHobbies() async {
+    isHobbyLoading.value = true;
+    bool needsRefresh = StorageProvider.read("needs_data_refresh") ?? false;
+    String? cachedData = StorageProvider.getString(StorageProvider.keyHobbies);
+
+    try {
+      // 1. Version match hai AUR cache hai -> Seedha Cache load karo
+      if (!needsRefresh && cachedData != null && cachedData.isNotEmpty) {
+        _loadHobbiesFromCache(cachedData);
+        return;
+      }
+
+      // 2. Version alag hai YA cache nahi hai -> API hit karo
+      HobbyModel data = await ApiService().fetchHobbies();
+      if (data.status == 1 && data.hobbies != null) {
+        hobbyList.assignAll(data.hobbies!);
+        hobbyList.add(Hobby(name: "Other"));
+        StorageProvider.saveString(StorageProvider.keyHobbies, json.encode(data.toJson()));
+      }
+    } catch (e) {
+      print("Hobby API Error, falling back to cache: $e");
+      // 3. Fallback: Agar API fail hui toh purana cache dikhao
+      if (cachedData != null) {
+        _loadHobbiesFromCache(cachedData);
+      }
+      rethrow; // FinalizeVersionUpdate ko error batane ke liye
+    } finally {
+      isHobbyLoading.value = false;
+    }
+  }
+
+// --- Updated getProfessions with Version & Fallback ---
+  Future<void> getProfessions() async {
+    isProfessionLoading.value = true;
+    bool needsRefresh = StorageProvider.read("needs_data_refresh") ?? false;
+    String? cachedData = StorageProvider.getString(StorageProvider.keyProfessions);
+
+    try {
+      if (!needsRefresh && cachedData != null && cachedData.isNotEmpty) {
+        _loadProfessionsFromCache(cachedData);
+        return;
+      }
+
+      ProfessionModel data = await ApiService().fetchProfessions();
+      if (data.status == 1 && data.professions != null) {
+        professionList.assignAll(data.professions!);
+        professionList.add(Profession(name: "Other"));
+        StorageProvider.saveString(StorageProvider.keyProfessions, json.encode(data.toJson()));
+      }
+    } catch (e) {
+      print("Profession API Error, fallback: $e");
+      if (cachedData != null) {
+        _loadProfessionsFromCache(cachedData);
+      }
+      rethrow;
+    } finally {
+      isProfessionLoading.value = false;
+    }
+  }
+
+// --- Updated getEthnicities with Version & Fallback ---
+  Future<void> getEthnicities() async {
+    isEthnicityLoading.value = true;
+    bool needsRefresh = StorageProvider.read("needs_data_refresh") ?? false;
+    String? cachedData = StorageProvider.getString(StorageProvider.keyEthnicities);
+
+    try {
+      if (!needsRefresh && cachedData != null && cachedData.isNotEmpty) {
+        _loadEthnicitiesFromCache(cachedData);
+        return;
+      }
+
+      EthnicityModel data = await ApiService().fetchEthnicities();
+      if (data.status == 1 && data.ethnicities != null) {
+        ethnicityList.assignAll(data.ethnicities!);
+        ethnicityList.add(Ethnicity(name: "Other"));
+        StorageProvider.saveString(StorageProvider.keyEthnicities, json.encode(data.toJson()));
+      }
+    } catch (e) {
+      print("Ethnicity API Error, fallback: $e");
+      if (cachedData != null) {
+        _loadEthnicitiesFromCache(cachedData);
+      }
+      rethrow;
+    } finally {
+      isEthnicityLoading.value = false;
+    }
+  }
+
+// --- Helper methods to avoid code duplication ---
+
+  void _loadHobbiesFromCache(String cachedData) {
+    var jsonDecoded = json.decode(cachedData);
+    HobbyModel data = HobbyModel.fromJson(jsonDecoded);
+    hobbyList.assignAll(data.hobbies!);
+    hobbyList.add(Hobby(name: "Other"));
+  }
+
+  void _loadProfessionsFromCache(String cachedData) {
+    var jsonDecoded = json.decode(cachedData);
+    ProfessionModel data = ProfessionModel.fromJson(jsonDecoded);
+    professionList.assignAll(data.professions!);
+    professionList.add(Profession(name: "Other"));
+  }
+
+  void _loadEthnicitiesFromCache(String cachedData) {
+    var jsonDecoded = json.decode(cachedData);
+    EthnicityModel data = EthnicityModel.fromJson(jsonDecoded);
+    ethnicityList.assignAll(data.ethnicities!);
+    ethnicityList.add(Ethnicity(name: "Other"));
   }
 
 
-  Future<void> getHobbies() async {
+
+
+/*  Future<void> getHobbies() async {
     isHobbyLoading.value = true;
     try {
       // Note: ApiService vich fetchHobbies() function hona chahida hai
@@ -366,7 +492,7 @@ class ProfileCreationController extends GetxController {
     } finally {
       isEthnicityLoading.value = false;
     }
-  }
+  }*/
 
 
   // --- Toggle Logic for Multi-Select ---
@@ -446,7 +572,7 @@ class ProfileCreationController extends GetxController {
   }
 
   void submitProfile(BuildContext context) async {
-/*    if (profileImage.value ==null && profileImageUrl.isEmpty) {
+  /*  if (profileImage.value ==null && profileImageUrl.isEmpty) {
       showCommonSnackbar(title: AppStrings.photoReqTitle, message: AppStrings.photoReqMsg);
       return;
     }
@@ -503,6 +629,21 @@ class ProfileCreationController extends GetxController {
       return;
     }
 
+    if(selectedHobbies.isEmpty){
+      showCommonSnackbar(title: AppStrings.hobbiesReqTitle, message: AppStrings.hobbiesReqMsg);
+      return;
+    }
+
+    if (selectedHobbies.value == "Other" &&
+        otherHobbyController.text.trim().isEmpty) {
+      showCommonSnackbar(
+        title: AppStrings.hobbiesReqMsg,
+        message: AppStrings.hobbiesReqMsg,
+      );
+      return;
+    }
+
+
     if(selectedDrinking.isEmpty){
       showCommonSnackbar(title: AppStrings.drinking, message: AppStrings.drinkingReqMsg);
       return;
@@ -513,10 +654,6 @@ class ProfileCreationController extends GetxController {
       return;
     }
 
-    if (aboutController.text.trim().isEmpty) {
-      showCommonSnackbar(title: AppStrings.aboutReqTitle, message: AppStrings.aboutReqMsg);
-      return;
-    };
 
     try {
       isLoading.value = true;
@@ -563,18 +700,17 @@ class ProfileCreationController extends GetxController {
 
       print("UpdateprofileBody $body");
 
-      File? imageToUpload;
-      if (profileImage.value != null) {
-        imageToUpload = profileImage.value; // ✅ only when new image selected
-      }
 
       bool success = isEdit
           ? await ApiService().updateProfileApi(
         body: body,
-        profileImage: imageToUpload, // null bhi ja sakta hai
+        profileImage: profileImage.value,
+          webImageBytes:webImage.value// null bhi ja sakta hai
       ) : await ApiService().createProfileApi(
         body: body,
-        profileImage: imageToUpload,
+        profileImage: profileImage.value,
+          webImageBytes:webImage.value
+
       );
       if (success) {
         MyProgressBar.hideLoadingDialog(context: context);

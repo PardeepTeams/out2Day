@@ -75,11 +75,7 @@ class LoginController extends GetxController {
       'countryCode': countryCode.value,
       'verificationId': verificationId,
     });
-  /*  Future.delayed(const Duration(seconds: 2), () {
-      isLoading.value = false;
-      MyProgressBar.hideLoadingDialog(context: context);
 
-    });*/
   }
 
   @override

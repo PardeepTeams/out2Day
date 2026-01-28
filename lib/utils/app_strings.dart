@@ -25,10 +25,15 @@ class AppStrings {
 
   static const male = "Male";
   static const female = "Female";
-  static const other = "Other";
+  static const other = "Non-binary";
+  static const notSay = "Prefer not to say";
   static const disableLocations = "Location services are disabled.";
   static const locationPermissionsDenied = "Location permissions are denied";
   static const addessError = "Unable to get address";
+
+  static const maleIntrest = "I want to we friends with men";
+  static const femaleIntrest = "I want to we friends with women";
+  static const everyoneIntrest = "I want to we friends with everyone";
 
   static const String personalInformation ="Personal Information";
   static const String  uploadProfile ="Upload Profile";
