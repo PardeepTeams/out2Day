@@ -22,7 +22,7 @@ class EventsController extends GetxController {
   }
 
   void loadEvents() async {
-    events.value = [
+ /*   events.value = [
       EventModel(
         id: 1,
         eventTitle: "Dating Night Party",
@@ -72,10 +72,10 @@ class EventsController extends GetxController {
       ),
     ];
 
-    filteredEvents.assignAll(events);
+    filteredEvents.assignAll(events);*/
 
 
-  /*  try {
+    try {
       isLoading.value = true;
       EventResponseModel response = await ApiService().fetchUpcomingEvents();
 
@@ -90,7 +90,7 @@ class EventsController extends GetxController {
     } catch (e) {
       isLoading.value = false;
       showCommonSnackbar(title: "Error", message: e.toString());
-    }*/
+    }
 
 
   }

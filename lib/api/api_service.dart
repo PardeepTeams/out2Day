@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:Out2Do/api/storage_helper.dart';
@@ -26,7 +27,7 @@ import '../utils/common_styles.dart';
 
 class ApiService {
   static const String baseUrl = "https://out2day.brickandwallsinc.com/api";
-  static const String imageBaseUrl = "https://out2day.brickandwallsinc.com/";
+ // static const String imageBaseUrl = "https://out2day.brickandwallsinc.com/";
 
   Future<bool> isConnected() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
@@ -173,6 +174,8 @@ class ApiService {
     required Map<String, String> body,
     File? profileImage,
     Uint8List? webImageBytes,
+    required List<dynamic> images,
+    required List<String> removedImages,
   }) async {
     if (!await isConnected()) {
       throw Exception("Please check your internet connection.");
@@ -194,6 +197,28 @@ class ApiService {
         'Accept': 'application/json',
         'Authorization': 'Bearer $token',
       });
+
+      for (var image in images) {
+        if (kIsWeb) {
+          request.files.add(http.MultipartFile.fromBytes(
+            'additional_images[]',
+            image as Uint8List,
+            filename: 'upload_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          ));
+        } else {
+          File file = image as File;
+          request.files.add(await http.MultipartFile.fromPath(
+            'additional_images[]',
+            file.path,
+          ));
+        }
+      }
+
+      if (removedImages.isNotEmpty) {
+        for (int i = 0; i < removedImages.length; i++) {
+          request.fields['removed_additional_images[$i]'] = removedImages[i];
+        }
+      }
 
       request.fields.addAll(body);
 
@@ -249,7 +274,7 @@ class ApiService {
             "Server error (${response.statusCode})",
       );
     } catch (e) {
-      // 🔴 DO NOT SWALLOW MESSAGE
+      print("PardeepSingh  $e");
       rethrow;
     }
   }
@@ -1240,5 +1265,53 @@ class ApiService {
     }
     return null;
   }
+
+
+  Future<Map<String, dynamic>> markUserInterested({
+    required String interestedId,
+  }) async {
+    try {
+      final String? token = StorageProvider.getToken();
+      final String? userId = StorageProvider.getUserData()!.id.toString();
+
+      final response = await http.post(
+        Uri.parse("$baseUrl/mark-interested"),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+        body: {
+          'user_id': userId,
+          'interested_id': interestedId,
+        },
+      ).timeout(const Duration(seconds: 15)); // Timeout add kiya
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        if (responseData['status'] == 1) {
+          return responseData;
+        } else {
+          // API level error (e.g. Already interested)
+          throw responseData['message'] ?? "Something went wrong";
+        }
+      } else if (response.statusCode == 401) {
+        throw "Session expired. Please login again.";
+      } else if (response.statusCode == 500) {
+        throw "Server is under maintenance. Please try later.";
+      } else {
+        throw "Error: ${response.statusCode}. Please try again.";
+      }
+    } on SocketException {
+      throw "No Internet connection. Please check your network.";
+    } on TimeoutException {
+      throw "Connection timed out. Please try again.";
+    } catch (e) {
+      // Baaki kisi bhi tarah ki error ke liye
+      rethrow;
+    }
+  }
+
+ //https://out2day.brickandwallsinc.com/api/mark-interested
 
 }

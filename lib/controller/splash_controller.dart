@@ -41,9 +41,12 @@ class SplashController extends GetxController {
     if (serverVersion != null && serverVersion != oldVersion) {
       // 🚩 Sirf flag set karein, version abhi save NA karein
       StorageProvider.write("temp_server_version", serverVersion);
+      StorageProvider.write("temp_static_server_version", serverVersion);
       StorageProvider.write("needs_data_refresh", true);
+      StorageProvider.write("needs_static_data_refresh", true);
     } else {
       StorageProvider.write("needs_data_refresh", false);
+      StorageProvider.write("needs_static_data_refresh", false);
     }
 
     // 3. 2-3 seconds ka delay (Total time manage karne ke liye)

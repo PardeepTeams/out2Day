@@ -284,9 +284,9 @@ class MyEventsScreen extends StatelessWidget {
                           backgroundColor: Colors.grey.shade200,
                           child: ClipOval(
                             child: CachedNetworkImage(
-                              imageUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1974&auto=format&fit=crop",
+                             // imageUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1974&auto=format&fit=crop",
                               fit: BoxFit.cover,
-                            //  imageUrl: "${event.userDetail!.profile!}",
+                              imageUrl: "${event.userDetail!.profile!}",
                               width: 64,
                               height: 64,
 
@@ -315,8 +315,8 @@ class MyEventsScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                              Text(
-                               "Test",
-                           //  event.userDetail!.firstName??"" ,
+                            //   "Test",
+                             event.userDetail!.firstName??"" ,
                                maxLines: 1,
                                overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -327,8 +327,8 @@ class MyEventsScreen extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              "Software Developer",
-                            //  event.userDetail!.profession??"",
+                            //  "Software Developer",
+                              event.userDetail!.profession??"",
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(

@@ -33,7 +33,9 @@ class UserData {
       country, height, ethnicity, profession, aboutMe,phone, drinking,smoking;
   int?  role;
   double? distnace;
-  dynamic? isBusiness;
+//  dynamic? isBusiness;
+  List<String>? additionalImages;
+
 
   UserData({
     this.id,
@@ -56,11 +58,12 @@ class UserData {
     this.ethnicity,
     this.profession,
     this.aboutMe,
-    this.isBusiness,
+ //   this.isBusiness,
     this.role,
     this.drinking,
     this.smoking,
-    this.distnace
+    this.distnace,
+    this.additionalImages,
   });
 
   UserData.fromJson(Map<String, dynamic> json) {
@@ -86,10 +89,13 @@ class UserData {
     ethnicity = json['ethnicity'];
     profession = json['profession'];
     aboutMe = json['about_me'];
-    isBusiness = json['is_business'];
+ //   isBusiness = json['is_business'];
     drinking = json['drinking'];
     smoking = json['smoking'];
     distnace = json["distance"];
+    if (json['additional_images'] != null) {
+      additionalImages = List<String>.from(json['additional_images']);
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -114,11 +120,12 @@ class UserData {
       'ethnicity': ethnicity,
       'profession': profession,
       'about_me': aboutMe,
-      'is_business': isBusiness,
+    //  'is_business': isBusiness,
       'role': role,
       'drinking': drinking,
       'smoking': smoking,
       'distance': distnace,
+      'additional_images': additionalImages,
     };
   }
 }

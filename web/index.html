@@ -19,7 +19,7 @@
 
 </head>
 <body>
-
+<div id="recaptcha-container" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999;"></div>
 <script>
   window.addEventListener('load', function(ev) {
     // Download main.dart.js
@@ -46,6 +46,8 @@
 
 <!-- Flutter Web autocomplete helper -->
 <script src="autocomplete_helper.js"></script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
 
 </body>
 </html>

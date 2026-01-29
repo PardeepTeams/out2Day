@@ -1,5 +1,6 @@
 import 'package:get_storage/get_storage.dart';
 
+import '../models/dynamic_page_model.dart';
 import '../models/user_model.dart';
 
 
@@ -14,6 +15,8 @@ class StorageProvider {
   static const String keyEthnicities = "ethnicities";
   static const String keyProfessions = "professions";
   static const String _versionKey = "app_api_version";
+  static const String _staticVersionKey = "app_static_api_version";
+  static const String _pagesKey = "dynamic_pages_cache";
 
   /// --- SAVE DATA ---
   static void saveAuthData({required String token, required UserData userData}) {
@@ -59,6 +62,14 @@ class StorageProvider {
   static String getApiVersion() {
     return GetStorage().read(_versionKey) ?? "1";
   }
+
+  static void saveStaticApiVersion(String version) {
+    GetStorage().write(_staticVersionKey, version);
+  }
+
+  static String getStaticApiVersion() {
+    return GetStorage().read(_staticVersionKey) ?? "1";
+  }
 // Generic Write
   static void write(String key, dynamic value) {
     GetStorage().write(key, value);
@@ -70,5 +81,21 @@ class StorageProvider {
   }
   static void remove(String key) {
     GetStorage().remove(key);
+  }
+
+  static void saveDynamicPages(List<DynamicPageModel> pages) {
+    // List ko JSON string ya Map list mein convert karein
+    List<Map<String, dynamic>> data = pages.map((v) => v.toJson()).toList();
+    GetStorage().write(_pagesKey, data);
+  }
+
+  /// 📤 Pages load karein
+  static List<DynamicPageModel>? getDynamicPages() {
+    var rawData = GetStorage().read(_pagesKey);
+    if (rawData != null) {
+      // JSON data ko wapis model list mein convert karein
+      return (rawData as List).map((v) => DynamicPageModel.fromJson(v)).toList();
+    }
+    return null;
   }
 }

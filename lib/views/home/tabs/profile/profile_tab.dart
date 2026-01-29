@@ -128,7 +128,9 @@ class ProfileTab extends StatelessWidget {
                 title: AppStrings.myProfile,
                 icon: Icons.person,
                 onTap:(){
-                  Get.toNamed(AppRoutes.userProfileDetail,arguments: {'id': 1,"isMy":true})?.then((value) {
+
+
+                  Get.toNamed(AppRoutes.userProfileDetail,arguments: {'id':controller.userId.value ,"isMy":true})?.then((value) {
                     // controller.refreshHome();
                   });
                 },

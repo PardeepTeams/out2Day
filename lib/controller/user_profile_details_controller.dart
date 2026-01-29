@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../api/api_service.dart';
 import '../models/user_model.dart';
 import '../routes/app_routes.dart';
 import '../utils/common_styles.dart';
@@ -8,30 +9,42 @@ import '../views/home/tabs/connect/widgets/match_dialog.dart';
 
 class UserProfileDetailController extends GetxController {
 
-  final name = "Ethan".obs;
-  final age = 32.obs;
-  final profession = "Fitness Instructor".obs;
-  final ethnicity = "Asian".obs;
-  final drinking = "No, I don't drink".obs;
-  final smoking = "No, I don't smoke".obs;
-  final hobbies = ["Gym",
+//  final name = "Ethan".obs;
+  final name = "".obs;
+ // final phone = "999999999".obs;
+  final phone = "".obs;
+//  final age = "32".obs;
+  final age = "".obs;
+ // final profession = "Fitness Instructor".obs;
+  final profession = "".obs;
+//  final ethnicity = "Asian".obs;
+  final ethnicity = "".obs;
+//  final drinking = "No, I don't drink".obs;
+  final drinking = "".obs;
+//  final smoking = "No, I don't smoke".obs;
+  final smoking = "".obs;
+ /* final hobbies = ["Gym",
     "Reading",
     "Cooking",
     "Gaming",
-    "Music"].obs;
-  final location = "Capitola, California".obs;
-  final image = "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4"
+    "Music"].obs;*/
+  final hobbies = [].obs;
+//  final location = "Capitola, California".obs;
+  final location = "".obs;
+  final image = ""
       .obs;
-  final about = "Spinning tracks by night, crushing fitness goals by day. "
-      "Always on the lookout for someone to harmonize with.".obs;
-
+/*  final about = "Spinning tracks by night, crushing fitness goals by day. "
+      "Always on the lookout for someone to harmonize with.".obs;*/
+  final about = "".obs;
   var userDetails = UserData().obs;
-  var isLoading = false.obs;
+  var isLoading = true.obs;
 
   RxBool isConnected = false.obs;
   RxBool isBlocked = false.obs;
   RxBool isMyProfile = false.obs;
   int? profileUserId;
+  RxList<String> additionalImages = <String>[].obs;
+
 
   @override
   void onInit() {
@@ -39,15 +52,15 @@ class UserProfileDetailController extends GetxController {
     if (Get.arguments != null) {
       profileUserId = Get.arguments['id']; // Maan lo key 'id' hai
       isMyProfile.value = Get.arguments['isMy'];
-      /*  if (profileUserId != null) {
+        if (profileUserId != null) {
         loadUserProfile(profileUserId!);
       } else {
         showCommonSnackbar(title: "Error", message: "User ID missing");
-      }*/
+      }
     }
   }
 
-/*  void loadUserProfile(int id) async {
+  void loadUserProfile(int id) async {
     try {
       isLoading.value = true;
       UserData data = await ApiService().fetchUserProfileDetails(id);
@@ -59,18 +72,25 @@ class UserProfileDetailController extends GetxController {
       ethnicity.value = userDetails.value.ethnicity??"";
       location.value = userDetails.value.address??'';
       drinking.value = userDetails.value.drinking??"";
-      smoking.value = userDetails.value.drinking??"";
+      smoking.value = userDetails.value.smoking??"";
       image.value = userDetails.value.profile??"";
-      aboutMe.value = userDetails.value.aboutMe??"";
+
+
+      about.value = userDetails.value.aboutMe??"";
       if(userDetails.value.hobbies!=null){
         hobbies.value =   userDetails.value.hobbies!.split(',').map((e) => e.trim()).toList();
+      }
+      additionalImages.clear();
+      additionalImages.add(image.value);
+      if (userDetails.value.additionalImages != null) {
+        additionalImages.addAll(userDetails.value.additionalImages!);
       }
     } catch (e) {
       showCommonSnackbar(title: "Error", message: e.toString());
     } finally {
       isLoading.value = false;
     }
-  }*/
+  }
 
   void connectUser() {
 

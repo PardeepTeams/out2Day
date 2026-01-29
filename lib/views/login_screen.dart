@@ -64,13 +64,13 @@ class LoginScreen extends StatelessWidget {
                       /// Country Code Picker Box
                       Obx(() => InkWell(
                         onTap: () async {
-                         /* final code = await controller.countryPicker.showPicker(context: context,
+                          final code = await controller.countryPicker.showPicker(context: context,
                             backgroundColor: MyColors.white,
                             pickerMaxHeight: Get.height * 0.7, // Sheet ki height fix karein
                             scrollToDeviceLocale: true,);
                           if (code != null) {
                             controller.countryCode.value = code.dialCode;
-                          }*/
+                          }
                         },
                         child: Container(
                           height: 55,

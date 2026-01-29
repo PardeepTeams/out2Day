@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../models/business_model.dart';
 import '../../utils/colors.dart';
 import '../../utils/common_styles.dart';
+import 'package:intl/intl.dart';
 
 class BusinessDetailsScreen extends StatefulWidget {
   final BusinessModel business;
@@ -200,7 +201,7 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
                             size: 18, color: MyColors.baseColor),
                         const SizedBox(width: 6),
                         Expanded(
-                          child: regularText("9:00 Am - 7:00 PM"),
+                          child: regularText("${formatToUITime(widget.business.startTime)} - ${formatToUITime(widget.business.endTime)}",),
                         ),
                       ],
                     ),
@@ -348,5 +349,20 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
         ),
       ),
     );
+  }
+
+  String formatToUITime(String? apiTime) {
+    if (apiTime == null || apiTime.isEmpty) return "";
+    try {
+      // API format "18:00:00" ko parse karein
+      DateFormat apiFormat = DateFormat("HH:mm:ss");
+      DateTime parsedTime = apiFormat.parse(apiTime);
+
+      // UI format "06:00 PM" mein convert karein
+      return DateFormat("hh:mm a").format(parsedTime);
+    } catch (e) {
+      print("Time Parsing Error: $e");
+      return "";
+    }
   }
 }

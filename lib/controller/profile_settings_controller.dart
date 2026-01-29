@@ -17,8 +17,9 @@ import '../widgets/dialog_helper.dart';
 
 class ProfileSettingsController extends GetxController {
   var profileImageUrl = "".obs;
-  RxString userName = "Test User".obs;
-  RxString userAge = "22".obs;
+  RxString userName = "".obs;
+  RxString userAge = "".obs;
+  RxInt userId = 0.obs;
 
   var notificationsEnabled = true.obs;
 
@@ -28,11 +29,12 @@ class ProfileSettingsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    getDynamicPages();
-   // loadUserFromStorage();
+  //  getDynamicPages();
+    loadDynamicPagesFromLocal();
+    loadUserFromStorage();
   }
 
-  Future<void> getDynamicPages() async {
+ /* Future<void> getDynamicPages() async {
     isSettingsLoading.value = true;
     try {
       var pages = await ApiService().fetchAllPages();
@@ -42,7 +44,7 @@ class ProfileSettingsController extends GetxController {
     } finally {
       isSettingsLoading.value = false;
     }
-  }
+  }*/
 
 
   void loadUserFromStorage() {
@@ -52,10 +54,11 @@ class ProfileSettingsController extends GetxController {
     if (user == null) return;
 
     print("firstName ${user.firstName}");
+    userId.value = user.id!;
 
     /// 🧑 Name
     userName.value =
-        "${user.firstName ?? ""} ${user.lastName ?? ""}".trim();
+        "${user.firstName ?? ""}".trim();
 
     /// 🎂 Age (DOB se)
     if (user.dob != null && user.dob!.isNotEmpty) {
@@ -64,11 +67,66 @@ class ProfileSettingsController extends GetxController {
 
     /// 🖼 Profile Image (API URL)
     if (user.profile != null && user.profile!.isNotEmpty) {
-      profileImageUrl.value =
-          ApiService.imageBaseUrl + user.profile!;
+      profileImageUrl.value = user.profile!;
     }
   }
 
+
+  void loadDynamicPagesFromLocal() {
+    bool needsRefresh = StorageProvider.read("needs_static_data_refresh") ?? false;
+    var cachedPages = StorageProvider.getDynamicPages(); // Ye method niche add karenge
+   /* if (cachedPages != null && cachedPages.isNotEmpty) {
+      dynamicPages.assignAll(cachedPages);
+    }else{
+      getDynamicPages();
+    }*/
+    if (needsRefresh || cachedPages == null || cachedPages.isEmpty) {
+      getDynamicPages();
+    } else {
+      dynamicPages.assignAll(cachedPages);
+    }
+  }
+
+  void _finalizeVersionUpdate() {
+    String? tempVersion = StorageProvider.read("temp_static_server_version");
+
+    if (tempVersion != null) {
+      StorageProvider.saveStaticApiVersion(tempVersion);
+      StorageProvider.write("needs_static_data_refresh", false);
+      StorageProvider.remove("temp_static_server_version");
+    }
+  }
+
+  Future<void> getDynamicPages() async {
+    // Loader sirf tab dikhayein jab screen khali ho
+    if (dynamicPages.isEmpty) isSettingsLoading.value = true;
+
+    try {
+      var pages = await ApiService().fetchAllPages();
+
+      if (pages != null && pages.isNotEmpty) {
+        dynamicPages.assignAll(pages);
+        StorageProvider.saveDynamicPages(pages); // Local mein save karein
+        _finalizeVersionUpdate();
+      } else {
+        // Agar API response khali aaye toh local fallback
+        _useLocalFallback();
+      }
+    } catch (e) {
+      print("DEBUG: API Error, falling back to local: $e");
+      _useLocalFallback();
+    } finally {
+      isSettingsLoading.value = false;
+    }
+  }
+
+// Helper method fallback ke liye
+  void _useLocalFallback() {
+    var cachedPages = StorageProvider.getDynamicPages();
+    if (cachedPages != null && cachedPages.isNotEmpty) {
+      dynamicPages.assignAll(cachedPages);
+    }
+  }
 
 
   /// Toggle notifications
@@ -133,8 +191,8 @@ class ProfileSettingsController extends GetxController {
     message: AppStrings.logoutMsg,
     confirmText: AppStrings.logout,
     onConfirm: () async {
-      Get.offAllNamed(AppRoutes.login);
-   /*   try{
+     // Get.offAllNamed(AppRoutes.login);
+      try{
         MyProgressBar.showLoadingDialog(context: context);
         int status = await ApiService().logoutApi();
         if (status == 1) {
@@ -146,7 +204,7 @@ class ProfileSettingsController extends GetxController {
       }catch(e){
         MyProgressBar.hideLoadingDialog(context: context);
         Get.snackbar("Error", e.toString());
-      }*/
+      }
     },
   );
   void privacyPolicy() {

@@ -35,7 +35,15 @@ class ProfileCreationController extends GetxController {
 
   Rx<File?> profileImage = Rx<File?>(null);
 
+  RxList<File> additionalImages = <File>[].obs; // Mobile ke liye
+  RxList<Uint8List> additionalWebImages = <Uint8List>[].obs; // Web ke liye
+  RxList<String> networkImages = <String>[].obs; // Edit mode mein purani images ke liye
+  final int maxImages = 5;
+
   RxInt genderIndex = 0.obs;
+  final genderValue = [AppStrings.male, AppStrings.female, AppStrings.other, AppStrings.notSay];
+
+
   var selectedPreferences = <String>[].obs;
   var isLoading = false.obs;
   var isBusinessProfile = false.obs;
@@ -82,6 +90,8 @@ class ProfileCreationController extends GetxController {
 
   RxString profileImageUrl = "".obs;
 
+  RxList<String> removedImagesList = <String>[].obs;
+
   void scrollToTop() {
     if (pageScrollController.hasClients) {
       pageScrollController.animateTo(
@@ -91,8 +101,12 @@ class ProfileCreationController extends GetxController {
       );
     }
   }
+
+
+
+
   void nextStep() {
-   /* if(currentStep == 0){
+    if(currentStep == 0){
       if(profileImage.value == null && webImage.value == null && profileImageUrl.isEmpty){
         showCommonSnackbar(title: AppStrings.photoReqTitle, message: AppStrings.photoReqMsg);
         return;
@@ -140,7 +154,7 @@ class ProfileCreationController extends GetxController {
         return;
       }
 
-    }*/
+    }
     if (currentStep.value < 2) {
       currentStep.value++;
       scrollToTop(); // 🔥 AUTO SCROLL TO TOP
@@ -168,6 +182,84 @@ class ProfileCreationController extends GetxController {
     }
   }
 
+
+  // Controller mein ye method add karein
+  Future<void> editImageAtIndex(int index, ImageSource source, {bool isNetwork = false}) async {
+    final _picker = ImagePicker();
+    try {
+      final XFile? pickedFile = await _picker.pickImage(source: source, imageQuality: 40);
+      if (pickedFile != null) {
+        if (isNetwork) {
+          // Purani network image hatao aur nayi local list mein add karo
+          networkImages.removeAt(index);
+          if (kIsWeb) {
+            additionalWebImages.add(await pickedFile.readAsBytes());
+          } else {
+            additionalImages.add(File(pickedFile.path));
+          }
+        } else {
+          // Local image ko update/replace karo
+          int localIndex = index - networkImages.length;
+          if (kIsWeb) {
+            additionalWebImages[localIndex] = await pickedFile.readAsBytes();
+          } else {
+            additionalImages[localIndex] = File(pickedFile.path);
+          }
+        }
+      }
+    } catch (e) {
+      showCommonSnackbar(title: "Error", message: "Failed to edit image");
+    }
+  }
+
+
+  // Image pick karne wala logic update karein
+  Future<void> pickMultipleImages(ImageSource source) async {
+    final _picker = ImagePicker();
+    // Total count check: Network + Local
+    int currentTotal = networkImages.length +
+        (kIsWeb ? additionalWebImages.length : additionalImages.length);
+
+    if (currentTotal >= 5) {
+      showCommonSnackbar(
+          title: "Limit Reached",
+          message: "You can add maximum 5 images",
+        //  isError: true
+      );
+      return;
+    }
+
+    try {
+      // pickImage hamesha single selection hi karta hai
+      final XFile? pickedFile = await _picker.pickImage(
+          source: source,
+          imageQuality: 40
+      );
+
+      if (pickedFile != null) {
+        if (kIsWeb) {
+          final bytes = await pickedFile.readAsBytes();
+          additionalWebImages.add(bytes); // List mein ek image add ho gayi
+        } else {
+          additionalImages.add(File(pickedFile.path)); // List mein ek image add ho gayi
+        }
+      }
+    } catch (e) {
+      showCommonSnackbar(title: "Error", message: "Failed to pick image");
+    }
+  }
+
+  void removeImage(int index, {bool isNetwork = false}) {
+    if (isNetwork) {
+      removedImagesList.add(networkImages[index]);
+      networkImages.removeAt(index);
+    } else if (kIsWeb) {
+      additionalWebImages.removeAt(index);
+    } else {
+      additionalImages.removeAt(index);
+    }
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -175,25 +267,26 @@ class ProfileCreationController extends GetxController {
     if (Get.arguments != null) {
       if (Get.arguments is bool) {
         isEdit = Get.arguments as bool;
-      } else{
-        getCurrentLocation();
-      }
-      /*else if (Get.arguments is Map) {
+      } else if (Get.arguments is Map) {
         phone = Get.arguments['phone'] ?? "";
         countryCode = Get.arguments['countryCode'] ?? "";
         getCurrentLocation();
-      }*/
+      }
 
       if (isEdit) {
-      /*  everAll(
+        final user = StorageProvider.getUserData();
+        phone = user!.phone.toString();
+        countryCode = user!.countryCode.toString();
+        _fillDataFromStorage(user!);
+        everAll(
           [ethnicityList, professionList, hobbyList],
               (_) {
-            final user = StorageProvider.getUserData();
+
             if (user != null) {
               _fillDataFromStorage(user);
             }
           },
-        );*/
+        );
       }
     }
   }
@@ -212,7 +305,7 @@ class ProfileCreationController extends GetxController {
       dobController.text = formatAge(user.dob!);
     }
     if (user.profile != null && user.profile!.isNotEmpty) {
-      profileImageUrl.value = ApiService.imageBaseUrl + user.profile!;
+      profileImageUrl.value =  user.profile!;
     }
 
     /// 📍 Location
@@ -223,7 +316,7 @@ class ProfileCreationController extends GetxController {
     longitude = double.tryParse(user.longitude ?? "0");
 
     /// 🚻 Gender
-    int index = availablePreferences.indexWhere(
+    int index = genderValue.indexWhere(
           (e) => e.toLowerCase() == user.gender?.toLowerCase(),
     );
     if (index != -1) {
@@ -231,10 +324,28 @@ class ProfileCreationController extends GetxController {
     }
 
     /// ❤️ Interests (comma separated → list)
-    if (user.interests != null && user.interests!.isNotEmpty) {
+  /*  if (user.interests != null && user.interests!.isNotEmpty) {
       selectedPreferences.assignAll(
         user.interests!.split(',').map((e) => e.trim()).toList(),
       );
+    }*/
+
+    if (user.interests != null && user.interests!.isNotEmpty) {
+      // 1. Pehle string ko split karke list banayein
+      List<String> apiInterests = user.interests!.split(',').map((e) => e.trim().toLowerCase()).toList();
+
+      // 2. Short keys ko vapas AppStrings wali lambi lines mein convert karein
+      List<String> uiInterests = apiInterests.map((key) {
+        if (key == "male") return AppStrings.maleIntrest;
+        if (key == "female") return AppStrings.femaleIntrest;
+        if (key == "everyone") return AppStrings.everyoneIntrest;
+        return "";
+      }).where((element) => element.isNotEmpty).toList();
+
+      // 3. UI list ko assign karein
+      selectedPreferences.assignAll(uiInterests);
+
+      print("selectedPreferences  $selectedPreferences");
     }
 
     /// 🎯 Hobbies
@@ -283,7 +394,11 @@ class ProfileCreationController extends GetxController {
     selectedSmoking.value = user.smoking ?? "";
 
     /// 🏢 Business profile
-    isBusinessProfile.value = user.isBusiness == "1";
+ //   isBusinessProfile.value = user.isBusiness == "1";
+
+    if(user.additionalImages!=null){
+      networkImages.assignAll(user.additionalImages!);
+    }
   }
 
 
@@ -572,7 +687,7 @@ class ProfileCreationController extends GetxController {
   }
 
   void submitProfile(BuildContext context) async {
-  /*  if (profileImage.value ==null && profileImageUrl.isEmpty) {
+    if (profileImage.value ==null && profileImageUrl.isEmpty && webImage.value == null) {
       showCommonSnackbar(title: AppStrings.photoReqTitle, message: AppStrings.photoReqMsg);
       return;
     }
@@ -669,6 +784,22 @@ class ProfileCreationController extends GetxController {
           .join(", ");
       final user = StorageProvider.getUserData();
 
+
+      String interestsValue = selectedPreferences.map((pref) {
+        // Value ko compare karne se pehle small letters mein convert aur trim karein
+        String p = pref.toString().toLowerCase().trim();
+
+        if (p == AppStrings.maleIntrest.toLowerCase().trim()) return "male";
+        if (p == AppStrings.femaleIntrest.toLowerCase().trim()) return "female";
+        if (p == AppStrings.everyoneIntrest.toLowerCase().trim()) return "everyone";
+
+        return "";
+      }).where((element) => element.isNotEmpty).join(',');
+
+      print("Final interestsValue: $interestsValue"); // Ab ye empty nahi aayega
+
+      print("selectedPreferences  $selectedPreferences");
+
       // 1. Saara data ik Map vich taiyar karo
       Map<String, String> body = {
         if (isEdit && user?.id != null) "user_id": user!.id.toString(),
@@ -677,10 +808,10 @@ class ProfileCreationController extends GetxController {
         "email": emailController.text.trim(),
         "country_code": countryCode,
         "phone": phone,
-        "gender": availablePreferences[genderIndex.value].toLowerCase(), // Male/Female/Other
+        "gender": genderValue[genderIndex.value].toLowerCase(), // Male/Female/Other
         "latitude": latitude?.toString() ?? "0.0",
         "longitude": longitude?.toString() ?? "0.0",
-        "interests": selectedPreferences.map((e) => e.toLowerCase()).join(','), // Comma separated string
+        "interests": interestsValue, // Comma separated string
         "dob": convertDateFormatApi(dobController.text.trim()),
         "address": locationController.text.trim(),
         "city": cityName ?? "",
@@ -705,7 +836,8 @@ class ProfileCreationController extends GetxController {
           ? await ApiService().updateProfileApi(
         body: body,
         profileImage: profileImage.value,
-          webImageBytes:webImage.value// null bhi ja sakta hai
+          webImageBytes:webImage.value, images: kIsWeb?additionalWebImages:additionalImages,
+          removedImages: removedImagesList// null bhi ja sakta hai
       ) : await ApiService().createProfileApi(
         body: body,
         profileImage: profileImage.value,
@@ -725,13 +857,13 @@ class ProfileCreationController extends GetxController {
       MyProgressBar.hideLoadingDialog(context: context);
       isLoading.value = false;
       showCommonSnackbar(title: "Error", message: e.toString());
-    }*/
+    }
 
-    if(isEdit){
+   /* if(isEdit){
       Get.back(result: true);
     }else{
       Get.offNamed(AppRoutes.home,arguments: {});
-    }
+    }*/
   }
 
   Future<Map<String, double>?> getLatLngFromPlaceId(String placeId, String apiKey) async {

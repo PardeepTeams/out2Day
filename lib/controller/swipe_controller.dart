@@ -11,6 +11,7 @@ class SwipeController extends GetxController {
 
   // Profile list (Asal app vich eh API ton aayegi)
   var profiles = <UserData>[].obs;
+  var gridProfiles = <UserData>[].obs;
   var isLoading = true.obs;
   var isGridView = false.obs;
   var commonIndex = 0.obs;
@@ -26,7 +27,7 @@ class SwipeController extends GetxController {
   void fetchProfiles() async {
     try {
       commonIndex.value = 0;
-      var staticUsers = [
+  /*    var staticUsers = [
         UserData(
           id: 1,
           firstName: "Rohit",
@@ -63,15 +64,17 @@ class SwipeController extends GetxController {
           city: "Mumbai",
             dob: "1999-12-12"
         ),
-      ];
+      ];*/
       isLoading.value = true;
       // Profiles vich static data assign kitta
     //  profiles.assignAll(staticUsers);
       profiles.clear();
+      gridProfiles.clear();
   //    isLoading.value = true;
-      profiles.assignAll(staticUsers);
-     /* var users = await ApiService().fetchHomeUsers();
-      profiles.assignAll(users);*/
+  //    profiles.assignAll(staticUsers);
+      var users = await ApiService().fetchHomeUsers();
+      profiles.assignAll(users);
+      gridProfiles.assignAll(users);
     } catch (e) {
       // Backend wala original message hi show hoyega
       showCommonSnackbar(title: "Error", message: e.toString());
@@ -80,15 +83,31 @@ class SwipeController extends GetxController {
     }
   }
 
+  void handleUserAction(int index, bool isLiked) {
+    if (index < 0 || index >= profiles.length) return;
+
+    final targetUser = profiles[index];
+
+    if (isLiked) {
+      Get.dialog(
+        MatchDialog(profile: targetUser),
+        barrierDismissible: false,
+      );
+    }
+
+    profiles.removeWhere((user) => user.id == targetUser.id);
+    gridProfiles.removeWhere((user) => user.id == targetUser.id);
+
+  }
+
   // Jadon card swipe hunda hai
   bool onSwipe(int previousIndex, int? currentIndex, CardSwiperDirection direction) {
     if (direction == CardSwiperDirection.right || direction == CardSwiperDirection.left) {
       commonIndex.value = currentIndex ?? profiles.length;
-      print("SwipeCurrent ${commonIndex.value}");
       final swipedProfile = profiles[previousIndex];
 
+      gridProfiles.removeWhere((user) => user.id == swipedProfile.id);
       if (direction == CardSwiperDirection.right) {
-        // 2. Match Dialog dikhao (Swiped profile use karke)
          Get.dialog(
         MatchDialog(profile: swipedProfile),
         barrierDismissible: false,
@@ -97,11 +116,8 @@ class SwipeController extends GetxController {
         // API Call ithe karo: controller.likeUser(swipedUser['id']);
       } else if (direction == CardSwiperDirection.left) {
         // print("Disliked: ${swipedProfile['name']}");
+        gridProfiles.remove(profiles[previousIndex]);
       }
-
-      // 3. ⚠️ IMPORTANT: Profiles remove na karo
-      // CardSwiper apne aap agle index te move ho janda hai.
-      // profiles.removeAt(previousIndex); // ISNU REMOVE KARDO
 
       return true;
     }else{
@@ -112,14 +128,11 @@ class SwipeController extends GetxController {
 
 
 
-  void connect(int index){
-    profiles.removeAt(index);
-    Get.dialog(
-      MatchDialog(profile: profiles[index]),
-      barrierDismissible: false,
-    );
+  void connectFromGrid(int index) {
+    handleUserAction(index, true);
   }
-  void cancel(int index){
-   profiles.removeAt(index);
+
+  void cancelFromGrid(int index) {
+    handleUserAction(index, false);
   }
 }

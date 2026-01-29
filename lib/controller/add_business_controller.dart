@@ -16,6 +16,7 @@ import '../utils/my_progress_bar.dart';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class AddBusinessController extends GetxController {
   /// Text Controllers
@@ -101,9 +102,25 @@ class AddBusinessController extends GetxController {
     longitude = double.parse(model.longitude??"0.0");
     cityName = model.city??"";
     country = model.country??"";
-
+    startTimeCtrl.text = formatToUITime(model.startTime);
+    endTimeCtrl.text = formatToUITime(model.endTime);
     // Server se aayi images networkImages mein dalenge
     networkImages.assignAll(model.businessImages ?? []);
+  }
+
+  String formatToUITime(String? apiTime) {
+    if (apiTime == null || apiTime.isEmpty) return "";
+    try {
+      // API format "18:00:00" ko parse karein
+      DateFormat apiFormat = DateFormat("HH:mm:ss");
+      DateTime parsedTime = apiFormat.parse(apiTime);
+
+      // UI format "06:00 PM" mein convert karein
+      return DateFormat("hh:mm a").format(parsedTime);
+    } catch (e) {
+      print("Time Parsing Error: $e");
+      return "";
+    }
   }
 
   void removeNetworkImage(int index) {
@@ -120,12 +137,14 @@ class AddBusinessController extends GetxController {
 
   /// Submit Business
   void submitBusiness(BuildContext context) async {
-    Get.back(result: true);
- /*   if (nameCtrl.text.isEmpty ||
+  // Get.back(result: true);
+    if (nameCtrl.text.isEmpty ||
         categoryCtrl.text.isEmpty ||
         descriptionCtrl.text.isEmpty ||
         locationCtrl.text.isEmpty||
-        webUrlCtrl.text.isEmpty
+        webUrlCtrl.text.isEmpty ||
+        startTimeCtrl.text.isEmpty ||
+        endTimeCtrl.text.isEmpty
     ) {
       Get.snackbar("Error", "Please fill all fields");
       return;
@@ -138,6 +157,10 @@ class AddBusinessController extends GetxController {
       return;
     }
 
+    if (!isEndTimeValid(startTimeCtrl.text, endTimeCtrl.text)) {
+      showCommonSnackbar(title: "Invalid Time", message: "End time must be after start time");
+      return;
+    }
 
     Map<String, String> body = {
       "user_id": StorageProvider.getUserData()?.id.toString() ?? "",
@@ -146,10 +169,12 @@ class AddBusinessController extends GetxController {
       "description": descriptionCtrl.text.trim(),
       "web_link": webUrlCtrl.text.trim(),
       "address": locationCtrl.text.trim(),
-      "city": city ?? "Delhi",
+      "city": cityName ?? "Delhi",
       "country": country ?? "India",
       "latitude": latitude?.toString() ?? "28.6139",
       "longitude": longitude?.toString() ?? "77.2090",
+      "start_time": formatToApiTime(startTimeCtrl.text),
+      "end_time": formatToApiTime(endTimeCtrl.text),
     };
 
     try {
@@ -172,27 +197,55 @@ class AddBusinessController extends GetxController {
     } catch (e) {
       MyProgressBar.hideLoadingDialog(context: context);
       showCommonSnackbar(title: "Error", message: e.toString());
-    }*/
+    }
   }
 
+  bool isEndTimeValid(String start, String end) {
+    try {
+      // Hamare format "10:30 PM" ko DateTime mein convert karenge compare karne ke liye
+      DateFormat inputFormat = DateFormat("h:mm a");
+      DateTime startTime = inputFormat.parse(start);
+      DateTime endTime = inputFormat.parse(end);
 
+      return endTime.isAfter(startTime);
+    } catch (e) {
+      return false;
+    }
+  }
+
+// Time ko "10:30 PM" se "22:30:00" mein badalne ke liye
+  String formatToApiTime(String timeStr) {
+    if (timeStr.isEmpty) return "00:00:00";
+    DateFormat inputFormat = DateFormat("h:mm a");
+    DateFormat outputFormat = DateFormat("HH:mm:ss");
+    DateTime time = inputFormat.parse(timeStr);
+    return outputFormat.format(time);
+  }
 
   void updateBusiness(BuildContext context,int id) async {
-    Get.back(result: true);
-/*    if (nameCtrl.text.isEmpty ||
+
+    if (nameCtrl.text.isEmpty ||
         categoryCtrl.text.isEmpty ||
         descriptionCtrl.text.isEmpty ||
         locationCtrl.text.isEmpty||
-        webUrlCtrl.text.isEmpty
+        webUrlCtrl.text.isEmpty ||
+        startTimeCtrl.text.isEmpty ||
+        endTimeCtrl.text.isEmpty
     ) {
       Get.snackbar("Error", "Please fill all fields");
       return;
     }
+
     if(!isValidUrl(webUrlCtrl.text.trim())){
       Get.snackbar("Error", "Please fill the valid link");
     }
     if(selectedImages.isEmpty && webImages.isEmpty && networkImages.isEmpty){
       Get.snackbar("Error", "Please add at least one image");
+      return;
+    }
+
+    if (!isEndTimeValid(startTimeCtrl.text, endTimeCtrl.text)) {
+      showCommonSnackbar(title: "Invalid Time", message: "End time must be after start time");
       return;
     }
 
@@ -204,11 +257,13 @@ class AddBusinessController extends GetxController {
       "description": descriptionCtrl.text.trim(),
       "web_link": webUrlCtrl.text.trim(),
       "address": locationCtrl.text.trim(),
-      "city": city ?? "Delhi",
+      "city": cityName ?? "Delhi",
       "country": country ?? "India",
       "latitude": latitude?.toString() ?? "0.0",
       "longitude": longitude?.toString() ?? "0.0",
-      "business_id": id.toString()
+      "business_id": id.toString(),
+      "start_time": formatToApiTime(startTimeCtrl.text),
+      "end_time": formatToApiTime(endTimeCtrl.text),
     };
 
     try {
@@ -230,7 +285,7 @@ class AddBusinessController extends GetxController {
     } catch (e) {
       MyProgressBar.hideLoadingDialog(context: context);
       showCommonSnackbar(title: "Error", message: e.toString());
-    }*/
+    }
   }
 
   Future<void> getLocationDetails(Prediction prediction) async {

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:Out2Do/api/api_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -13,8 +14,19 @@ import '../widgets/common_button.dart';
 import '../widgets/common_text_field.dart';
 import '../controller/profile_creation_controller.dart';
 
-class ProfileCreationScreen extends StatelessWidget {
-  ProfileCreationScreen({super.key});
+class ProfileCreationScreen extends StatefulWidget {
+  const ProfileCreationScreen({super.key});
+
+  @override
+  State<ProfileCreationScreen> createState() => _ProfileCreationScreenState();
+}
+class _ProfileCreationScreenState extends State<ProfileCreationScreen>
+    with AutomaticKeepAliveClientMixin{
+
+
+  @override
+  bool get wantKeepAlive => true; // Isse state maintain rahegi
+
 
   final ProfileCreationController controller = Get.put(
     ProfileCreationController(),
@@ -266,7 +278,7 @@ class ProfileCreationScreen extends StatelessWidget {
             return Column( // 👈 Column use kiya vertical list ke liye
               children: preferenceList.asMap().entries.map((entry) {
                 final preference = entry.value;
-                final value = preference.toLowerCase();
+                final value = preference;
                 final isSelected = controller.selectedPreferences.contains(value);
 
                 return Padding(
@@ -696,6 +708,155 @@ class ProfileCreationScreen extends StatelessWidget {
     );
   }
 
+
+
+
+  Widget _buildCreateSinglePhoto(BuildContext context) {
+    return Obx(() {
+      ImageProvider? imageProvider;
+      if (kIsWeb && controller.webImage.value != null) {
+        imageProvider = MemoryImage(controller.webImage.value!);
+      } else if (!kIsWeb && controller.profileImage.value != null) {
+        imageProvider = FileImage(controller.profileImage.value!);
+      }
+
+      return GestureDetector(
+        onTap: () => showImageSourceSheet(
+          onImageSelected: (source) => controller.pickImage(source),
+        ),
+        child: Stack(
+          alignment: Alignment.bottomRight,
+          children: [
+            CircleAvatar(
+              radius: 55,
+              backgroundColor: MyColors.greyFilled2,
+              backgroundImage: imageProvider,
+              child: imageProvider == null
+                  ? const Icon(Icons.person, size: 50, color: MyColors.grey4)
+                  : null,
+            ),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: const BoxDecoration(color: MyColors.baseColor, shape: BoxShape.circle),
+              child: const Icon(Icons.camera_alt, size: 18, color: MyColors.white),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  /// ➕ ADD BUTTON WIDGET
+  Widget _buildAddButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () => showImageSourceSheet(
+        onImageSelected: (source) => controller.pickMultipleImages(source),
+      ),
+      child: Container(
+        width: 100,
+        height: 100,
+        margin: const EdgeInsets.only(right: 15),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), border: Border.all(color: MyColors.baseColor)),
+        child: const Icon(Icons.add_a_photo_outlined, color: MyColors.baseColor, size: 30),
+      ),
+    );
+  }
+
+  /// 🖼 IMAGE CARD WIDGET
+  Widget _buildImageCard(int index) {
+    ImageProvider? imageProvider;
+    bool isNetwork = false;
+
+    if (index < controller.networkImages.length) {
+      imageProvider = NetworkImage("${controller.networkImages[index]}");
+      isNetwork = true;
+    } else {
+      int localIndex = index - controller.networkImages.length;
+      imageProvider = kIsWeb
+          ? MemoryImage(controller.additionalWebImages[localIndex])
+          : FileImage(controller.additionalImages[localIndex]);
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(right: 15),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              image: DecorationImage(image: imageProvider!, fit: BoxFit.cover),
+            ),
+          ),
+
+          // ❌ DELETE ICON (Top Right)
+          Positioned(
+            top: 5, right: 5,
+            child: GestureDetector(
+              onTap: () => controller.removeImage(index, isNetwork: isNetwork),
+              child: Container(
+                padding: const EdgeInsets.all(5),
+                decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                child: const Icon(Icons.close, size: 14, color: Colors.white),
+              ),
+            ),
+          ),
+
+          // 📷 EDIT ICON (Bottom Right)
+        /*  Positioned(
+            bottom: 0,
+            right: 8,
+            child: GestureDetector(
+              onTap: () => showImageSourceSheet(
+                onImageSelected: (source) => controller.editImageAtIndex(index, source, isNetwork: isNetwork),
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: const BoxDecoration(
+                  color: MyColors.baseColor,
+                  shape: BoxShape.circle,
+                  boxShadow: [BoxShadow(color: Colors.black, blurRadius: 4)],
+                ),
+                child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
+              ),
+            ),
+          ),*/
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEditPhotoList(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 110,
+          child: Obx(() {
+            int networkCount = controller.networkImages.length;
+            int localCount = kIsWeb ? controller.additionalWebImages.length : controller.additionalImages.length;
+            int total = networkCount + localCount;
+
+            return ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: total < 5 ? total + 1 : 5,
+              itemBuilder: (context, index) {
+                if (total < 5 && index == 0) {
+                  return _buildAddButton(context);
+                }
+                int actualIndex = total < 5 ? index - 1 : index;
+                return _buildImageCard(actualIndex);
+              },
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
   /// 🔹 STEP 1 – BASIC INFO
   Widget _stepOne(BuildContext context) {
     return Column(
@@ -717,7 +878,6 @@ class ProfileCreationScreen extends StatelessWidget {
         ),
         const SizedBox(height: 20),
 
-        /// 🔥 PROFILE IMAGE PICKER
         Obx(() {
           ImageProvider? imageProvider;
 
@@ -838,6 +998,16 @@ class ProfileCreationScreen extends StatelessWidget {
           //   keyboardType: TextInputType.multiline,
           textCapitalization: TextCapitalization.words,
         ),
+
+
+
+        controller.isEdit ?commonTextFieldLargeGap():SizedBox(),
+        controller.isEdit ? Align(
+          alignment: AlignmentGeometry.centerLeft,
+          child: regularText(AppStrings.additionalImages),
+        ):SizedBox(),
+        controller.isEdit ? _buildEditPhotoList(context) : SizedBox(),
+
         commonButtonGap(),
       ],
     );

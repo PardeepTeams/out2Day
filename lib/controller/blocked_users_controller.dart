@@ -18,7 +18,7 @@ class BlockedUsersController extends GetxController {
   }
 
   void loadBlockedUsers() async {
-    blockedUsers.value = [
+  /*  blockedUsers.value = [
       UserData(
           id: 1,
           firstName: "Rohit",
@@ -55,9 +55,9 @@ class BlockedUsersController extends GetxController {
           city: "Mumbai",
           dob: "1999-12-12"
       ),
-    ];
+    ];*/
 
-   /* try {
+    try {
       isLoading(true);
       BlockedUsersResponse response = await ApiService().getBlockedUsers();
 
@@ -68,7 +68,7 @@ class BlockedUsersController extends GetxController {
       showCommonSnackbar(title: "Error", message: e.toString());
     } finally {
       isLoading(false);
-    }*/
+    }
   }
 
   void unblockUser(UserData user,BuildContext context) async {

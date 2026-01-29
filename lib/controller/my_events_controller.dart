@@ -110,7 +110,7 @@ class MyEventsController extends GetxController {
   }
 
   void loadMyEvents() async {
-    myEvents.value = [
+  /*  myEvents.value = [
       EventModel(
           id: 1,
           eventTitle: "Dating Night Party",
@@ -159,9 +159,9 @@ class MyEventsController extends GetxController {
           country: "India"
       ),
     ];
-    filteredEvents.assignAll(myEvents);
+    filteredEvents.assignAll(myEvents);*/
 
-/*    try {
+    try {
       isLoading.value = true;
       MyEventResponseModel response = await ApiService().fetcMyEvents();
 
@@ -177,7 +177,7 @@ class MyEventsController extends GetxController {
       isLoading.value = false;
       print("MyEventsError $e");
       showCommonSnackbar(title: "Error", message: e.toString());
-    }*/
+    }
 
   }
 
@@ -248,7 +248,7 @@ class MyEventsController extends GetxController {
 
   /// ---------------- ADD EVENT ----------------
   void addEvent(BuildContext context) async {
-/*    String apiDate  = convertDateFormatApi(dateCtrl.text.trim());
+    String apiDate  = convertDateFormatApi(dateCtrl.text.trim());
     MyProgressBar.showLoadingDialog(context: context);
     Map<String, String> body = {
       "user_id": StorageProvider.getUserData()?.id.toString() ?? "",
@@ -257,7 +257,7 @@ class MyEventsController extends GetxController {
       "event_date": apiDate, // Format YYYY-MM-DD
       "event_time": formatTimeTo24Hour(timeCtrl.text.trim()),
       "address": locationCtrl.text.trim(),
-      "city": city.toString(),
+      "city": cityName.toString(),
       "country": country.toString(),
       "latitude": latitude.toString(),
       "longitude": longitude.toString(),
@@ -276,28 +276,15 @@ class MyEventsController extends GetxController {
     } catch (e) {
       MyProgressBar.hideLoadingDialog(context: context);
       showCommonSnackbar(title: "Error", message: e.toString());
-    }*/
+    }
 
-/*    myEvents.add(
-      EventModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: titleCtrl.text,
-        location: locationCtrl.text,
-        description: descCtrl.text,
-        date: selectedDate.value!,
-        images: [
-          ...networkImages,
-          ...selectedImages.map((e) => e.path),
-        ], time: timeCtrl.text.toString(),
-      ),
-    );*/
-    Get.back(result: true);
-    clearForm();
+   // Get.back(result: true);
+  //  clearForm();
   }
 
   /// ---------------- UPDATE EVENT ----------------
   void updateEvent(EventModel event,BuildContext context) async{
-/*    String apiDate  = convertDateFormatApi(dateCtrl.text.trim());
+    String apiDate  = convertDateFormatApi(dateCtrl.text.trim());
     MyProgressBar.showLoadingDialog(context: context);
     Map<String, String> body = {
       "user_id": StorageProvider.getUserData()?.id.toString() ?? "",
@@ -306,7 +293,7 @@ class MyEventsController extends GetxController {
       "event_date": apiDate, // Format YYYY-MM-DD
       "event_time": formatTimeTo24Hour(timeCtrl.text.trim()),
       "address": locationCtrl.text.trim(),
-      "city": city.toString(),
+      "city": cityName.toString(),
       "country": country.toString(),
       "latitude": latitude.toString(),
       "longitude": longitude.toString(),
@@ -328,8 +315,8 @@ class MyEventsController extends GetxController {
     } catch (e) {
       MyProgressBar.hideLoadingDialog(context: context);
       showCommonSnackbar(title: "Error", message: e.toString());
-    }*/
-    Get.back(result: true);
+    }
+  //  Get.back(result: true);
   }
 
   bool validate() {
@@ -510,9 +497,9 @@ class MyEventsController extends GetxController {
 
 
   void deleteEvent(EventModel event) async {
-    myEvents.remove(event);
-    filterEvents(searchController.text);
-    /*try {
+ //   myEvents.remove(event);
+  //  filterEvents(searchController.text);
+    try {
       // 1. Loading dikhao
       MyProgressBar.showLoadingDialog(context: Get.context!);
 
@@ -539,7 +526,7 @@ class MyEventsController extends GetxController {
     } catch (e) {
       MyProgressBar.hideLoadingDialog(context: Get.context!);
       showCommonSnackbar(title: "Error", message: e.toString());
-    }*/
+    }
 
   }
 

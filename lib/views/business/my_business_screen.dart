@@ -9,6 +9,7 @@ import '../../utils/colors.dart';
 import '../../utils/common_styles.dart';
 import '../../widgets/dialog_helper.dart';
 import 'business_details_screen.dart';
+import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart'; // 👈 Import add karein
 
 
@@ -360,16 +361,11 @@ class MyBusinessesScreen extends StatelessWidget {
                         Expanded(child:
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Row(
                               children: [
-                                const Icon(
-                                  Icons.title,
-                                  size: 14,
-                                  color: MyColors.white,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
+                                Expanded(child:  Text(
                                   business.businessName!,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -380,7 +376,8 @@ class MyBusinessesScreen extends StatelessWidget {
                                     fontWeight: FontWeight.w500,
                                     height: 1.3,
                                   ),
-                                ),
+                                ) )
+                              ,
                               ],
                             ),
                             Row(
@@ -391,7 +388,7 @@ class MyBusinessesScreen extends StatelessWidget {
                                   color: MyColors.white70,
                                 ),
                                 const SizedBox(width: 6),
-                                Text(
+                                Expanded(child:   Text(
                                   business.address!,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -402,7 +399,8 @@ class MyBusinessesScreen extends StatelessWidget {
                                     fontWeight: FontWeight.w400,
                                     height: 1.3,
                                   ),
-                                ),
+                                ))
+                              ,
                               ],
                             ),
 
@@ -415,8 +413,8 @@ class MyBusinessesScreen extends StatelessWidget {
                                   color: MyColors.white70,
                                 ),
                                 const SizedBox(width: 6),
-                                Text(
-                                  "9:00 AM - 7:00 PM",
+                                Expanded(child:  Text(
+                                  "${formatToUITime(business.startTime)} - ${formatToUITime(business.endTime)}",
                                   //  formatTimeTo12Hour(event.eventTime),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -426,7 +424,8 @@ class MyBusinessesScreen extends StatelessWidget {
                                     fontWeight: FontWeight.w400,
                                     fontFamily: "regular",
                                   ),
-                                ),
+                                ), )
+
                               ],
                             ),
                           ],
@@ -760,5 +759,20 @@ class MyBusinessesScreen extends StatelessWidget {
         child: Icon(icon, size: 18, color: color),
       ),
     );
+  }
+
+  String formatToUITime(String? apiTime) {
+    if (apiTime == null || apiTime.isEmpty) return "";
+    try {
+      // API format "18:00:00" ko parse karein
+      DateFormat apiFormat = DateFormat("HH:mm:ss");
+      DateTime parsedTime = apiFormat.parse(apiTime);
+
+      // UI format "06:00 PM" mein convert karein
+      return DateFormat("hh:mm a").format(parsedTime);
+    } catch (e) {
+      print("Time Parsing Error: $e");
+      return "";
+    }
   }
 }

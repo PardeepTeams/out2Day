@@ -36,6 +36,8 @@ class BusinessModel {
   String? createdAt;
   String? updatedAt;
   UserDetail? userDetail;
+  String? startTime;
+  String? endTime;
 
   BusinessModel({
     this.id,
@@ -54,6 +56,8 @@ class BusinessModel {
     this.createdAt,
     this.updatedAt,
     this.userDetail,
+    this.startTime,
+    this.endTime,
   });
 
   BusinessModel.fromJson(Map<String, dynamic> json) {
@@ -75,6 +79,9 @@ class BusinessModel {
     userDetail = json['user_detail'] != null
         ? UserDetail.fromJson(json['user_detail'])
         : null;
+
+    startTime = json['start_time'];
+    endTime = json['end_time'];
   }
 }
 

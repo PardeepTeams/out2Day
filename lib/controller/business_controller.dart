@@ -38,7 +38,7 @@ class BusinessController extends GetxController {
   }
 
   void loadBusinesses() async {
-    allBusinesses.assignAll([
+   /* allBusinesses.assignAll([
       BusinessModel(
         id: 1,
         businessName: "Adult Dance Classes",
@@ -96,8 +96,8 @@ class BusinessController extends GetxController {
         webLink: "https://cafemocha.com",
       ),
     ]);
-    filteredBusinesses.assignAll(allBusinesses);
-  /*  allBusinesses.clear();
+    filteredBusinesses.assignAll(allBusinesses);*/
+    allBusinesses.clear();
     try {
       isLoading.value = true;
       BusinessResponseModel response = await ApiService().fetchAllBusinesses();
@@ -114,14 +114,14 @@ class BusinessController extends GetxController {
       isLoading.value = false;
       print("MyEventsError $e");
       showCommonSnackbar(title: "Error", message: e.toString());
-    }*/
+    }
 
 
   }
 
   void loadMyBusiness() async {
     myBusinesses.clear();
-    myBusinesses.assignAll([
+/*    myBusinesses.assignAll([
       BusinessModel(
         id: 1,
         businessName: "Adult Dance Classes",
@@ -179,8 +179,8 @@ class BusinessController extends GetxController {
         webLink: "https://cafemocha.com",
       ),
     ]);
-    filteredMyBusinesses.assignAll(myBusinesses);
-/*    try {
+    filteredMyBusinesses.assignAll(myBusinesses);*/
+    try {
       isLoading.value = true;
       MyBusinessResponseModel response = await ApiService().fetcMyBusinesses();
 
@@ -196,7 +196,7 @@ class BusinessController extends GetxController {
       isLoading.value = false;
       print("MyEventsError $e");
       showCommonSnackbar(title: "Error", message: e.toString());
-    }*/
+    }
   }
 
   void filterMyBusinesses(String query) {
@@ -234,9 +234,9 @@ class BusinessController extends GetxController {
   }
 
   void deleteBusiness(BusinessModel business) async{
-    myBusinesses.remove(business);
-    filteredMyBusinesses.remove(business);
-   /* try {
+   // myBusinesses.remove(business);
+   // filteredMyBusinesses.remove(business);
+    try {
       // 1. Loading dikhao
       MyProgressBar.showLoadingDialog(context: Get.context!);
 
@@ -263,7 +263,7 @@ class BusinessController extends GetxController {
     } catch (e) {
       MyProgressBar.hideLoadingDialog(context: Get.context!);
       showCommonSnackbar(title: "Error", message: e.toString());
-    }*/
+    }
   }
 
   String statusText(int status) {

@@ -90,7 +90,7 @@ class AppStrings {
   static const String genderLabel = "Gender";
   static const String locationLabel = "Location";
   static const String locationHint = "Location";
-  static const String interestedInLabel = "I'm Interested In";
+  static const String interestedInLabel = "Interest";
   static const String businessProfileLabel = "Business Profile";
   static const String emailLabel = "Email";
   static const String emailHint = "Email";
@@ -98,6 +98,8 @@ class AppStrings {
   static const String dobHint = "Select DOB";
   static const String professionLabel = "Profession";
   static const String professionHint = "Profession";
+  static const String ageLabel = "Age";
+  static const String additionalImages = "Additinal Images";
 
   static const String aboutLabel = "About Me";
   static const String aboutHint = "About";

@@ -197,9 +197,9 @@ class SwipeCardScreen extends StatelessWidget {
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
       ),
-      itemCount: controller.profiles.length,
+      itemCount: controller.gridProfiles.length,
       itemBuilder: (context, index) {
-        return _userCard(controller,controller.profiles[index],index);
+        return _userCard(controller,controller.gridProfiles[index],index);
       },
     );
   }
@@ -264,7 +264,7 @@ class SwipeCardScreen extends StatelessWidget {
                       child: IconButton(
                         icon: const Icon(Icons.close, color: Colors.white),
                         onPressed: () {
-                          controller.cancel(index);
+                          controller.cancelFromGrid(index);
                         },
                       ),
                     ),
@@ -275,7 +275,7 @@ class SwipeCardScreen extends StatelessWidget {
                       child: IconButton(
                         icon: const Icon(Icons.thumb_up, color: Colors.white),
                         onPressed: () {
-                          controller.connect(index);
+                          controller.connectFromGrid(index);
                         },
                       ),
                     ),

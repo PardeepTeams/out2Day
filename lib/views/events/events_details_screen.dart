@@ -87,8 +87,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                          CircleAvatar(
                           radius: 22,
                           backgroundImage: NetworkImage(
-                         //   event.userDetail!.profile!
-                            "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
+                            event.userDetail!.profile!
+                         //   "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -96,8 +96,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              mediumText(/*event.userDetail!.firstName!*/ "Test", MyColors.white),
-                              whiteRegularText(/*event.userDetail!.profession!*/"Software Developer",),
+                              mediumText(event.userDetail!.firstName! , MyColors.white),
+                              whiteRegularText(event.userDetail!.profession!,),
                             ],
                           ),
                         ),

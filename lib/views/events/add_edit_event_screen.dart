@@ -193,9 +193,12 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
             CommonButton(
               title: widget.isEdit ? AppStrings.updateEvent : AppStrings.createEvent,
               onTap: () {
-                widget.isEdit
-                    ? controller.updateEvent(widget.event!, context)
-                    : controller.addEvent(context);
+                if(controller.validate()){
+                  widget.isEdit
+                      ? controller.updateEvent(widget.event!, context)
+                      : controller.addEvent(context);
+                }
+
                /* if(controller.validate()){
                   widget.isEdit
                       ? controller.updateEvent(widget.event!, context)
