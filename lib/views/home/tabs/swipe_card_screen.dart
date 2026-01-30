@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import '../../../controller/swipe_controller.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class SwipeCardScreen extends StatelessWidget {
   const SwipeCardScreen({super.key});
@@ -20,7 +21,13 @@ class SwipeCardScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: CommonHomeAppBarStatic(title: "",showGridToggle: true,
         isGridView: controller.isGridView,
-        onGridToggle: () => controller.isGridView.toggle(),),
+        onGridToggle: (){
+        controller.profiles.clear();
+        controller.profiles.assignAll(controller.gridProfiles);
+        controller.profiles.refresh();
+        controller.commonIndex.value = 0;
+        controller.isGridView.toggle();
+        },),
       body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
@@ -32,6 +39,13 @@ class SwipeCardScreen extends StatelessWidget {
           return Center(child: regularText(
             "No Users found"
           ),);
+        }
+        if(controller.isGridView.value){
+          if(controller.gridProfiles.isEmpty){
+            return Center(child: regularText(
+                "No Users found"
+            ),);
+          }
         }
 
         return controller.isGridView.value
@@ -54,7 +68,7 @@ class SwipeCardScreen extends StatelessWidget {
                 cardsCount: controller.profiles.length,
                 onSwipe: controller.onSwipe,
                 isLoop: false,
-                numberOfCardsDisplayed: controller.profiles.length > 3 ? 3 : controller.profiles.length,
+                numberOfCardsDisplayed: controller.profiles.length,
                 backCardOffset: const Offset(0, -30),
                 padding: const EdgeInsets.only(
                     left: 16,
@@ -63,7 +77,7 @@ class SwipeCardScreen extends StatelessWidget {
                     bottom: 10 // Space for buttons to overlap
                 ),
                 cardBuilder: (context, index, h, v) {
-                  return _buildProfileCard(controller.profiles[index]);
+                  return _buildProfileCard(controller,controller.profiles[index]);
                 },
               ),
             ),
@@ -97,18 +111,101 @@ class SwipeCardScreen extends StatelessWidget {
       ],
     );
   }
-  Widget _buildProfileCard(UserData profile) {
+
+  Widget _buildProfileCard(SwipeController controller, UserData profile) {
+    // Safe Image URLs
+    String mainImage =  (profile.additionalImages?.isNotEmpty == true ? profile.additionalImages![0] : "");
+    // Yahan thumbnail ka URL pass karein jo backend se aa raha hai
+    String thumbImage = profile.additionalImagesThumb![0] ?? "";
+
+    return InkWell(
+      onTap: () {
+        Get.toNamed(AppRoutes.ewProfileDetail, arguments: {'id': profile.id, "isMy": false})?.then((value) {
+          controller.fetchProfiles();
+        });
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(25),
+        ),
+        child: ClipRRect( // 👈 Zaroori hai taaki image corners round rahein
+          borderRadius: BorderRadius.circular(25),
+          child: Stack(
+            children: [
+              // --- 🟢 BACKGROUND IMAGE WITH CACHE & THUMBNAIL ---
+              Positioned.fill(
+                child: CachedNetworkImage(
+                  imageUrl: mainImage,
+                  fit: BoxFit.cover,
+                  // Jab tak high-res load na ho, backend wala thumbnail dikhao
+                  placeholder: (context, url) => Image.network(
+                    thumbImage,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.broken_image, size: 50, color: Colors.white),
+                  ),
+                ),
+              ),
+
+              // --- 🔵 DISTANCE BADGE ---
+              Positioned(
+                top: 20,
+                left: 20,
+                child: _badge("${profile.distnace!} km", Icons.location_on_outlined),
+              ),
+
+              // --- ⚪ NAME & INFO (Glassmorphism) ---
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(25),
+                    bottomRight: Radius.circular(25),
+                  ),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        border: Border.all(color: Colors.white.withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          semiboldTextWhite("${profile.firstName!}, ${calculateAge(profile.dob!).toString()}"),
+                          whiteRegularText(profile.profession ?? ""),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+/*  Widget _buildProfileCard(SwipeController controller,UserData profile) {
     return InkWell(
       onTap: (){
         Get.toNamed(AppRoutes.ewProfileDetail,arguments: {'id': profile.id, "isMy":false})?.then((value) {
-         // controller.refreshHome();
+          controller.fetchProfiles();
         });
       },
       child:Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(25),
         image: DecorationImage(
-          image: NetworkImage(profile.profile!),
+          image: NetworkImage(profile.profile?? profile.additionalImages![0]),
           fit: BoxFit.cover,
         ),
       ),
@@ -117,7 +214,7 @@ class SwipeCardScreen extends StatelessWidget {
           // Distance Badge
           Positioned(
             top: 20, left: 20,
-            child: _badge("${profile.distnace!.toStringAsFixed(1)} km", Icons.location_on_outlined),
+            child: _badge("${profile.distnace!} km", Icons.location_on_outlined),
           ),
 
           // Name & Info (Glassmorphism)
@@ -156,7 +253,7 @@ class SwipeCardScreen extends StatelessWidget {
         ],
       ),
     ));
-  }
+  }*/
 
   Widget _circularButton(String icon, Color color, VoidCallback onTap) {
     return GestureDetector(
@@ -205,11 +302,107 @@ class SwipeCardScreen extends StatelessWidget {
   }
 
 
-  Widget _userCard(SwipeController controller,UserData user,int index) {
+  Widget _userCard(SwipeController controller, UserData user, int index) {
+    // Thumbnail aur Original URL nikaal rahe hain
+    String originalImage = (user.additionalImages?.isNotEmpty == true ? user.additionalImages![0] : "");
+    // Maan lijiye aapke model mein 'thumbnail' field hai, agar nahi hai toh main image hi placeholder rahegi
+    String thumbnailImage = user.additionalImagesThumb![0] ?? "";
+
+    return InkWell(
+      onTap: () {
+        Get.toNamed(AppRoutes.ewProfileDetail, arguments: {'id': user.id, "isMy": false})?.then((value) {
+          controller.fetchProfiles();
+        });
+      },
+      child: ClipRRect( // Taaki image corners round rahein
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+          child: Stack(
+            children: [
+              // --- 🟢 BACKGROUND IMAGE WITH THUMBNAIL ---
+              Positioned.fill(
+                child: CachedNetworkImage(
+                  imageUrl: originalImage,
+                  fit: BoxFit.cover,
+                  // Jab tak original load ho, thumbnail network se dikhao
+                  placeholder: (context, url) => Image.network(
+                    thumbnailImage,
+                    fit: BoxFit.cover,
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.broken_image, size: 50),
+                  ),
+                ),
+              ),
+
+              // --- 🔵 OVERLAY CONTENT (Text + Buttons) ---
+              Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  // 1. Name aur Age
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+                      ),
+                    ),
+                    child: Text(
+                      "${user.firstName}, ${calculateAge(user.dob!).toString()}",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontFamily: "semibold",
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+
+                  // 2. Action Buttons (Blur Effect)
+                  ClipRRect(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        height: 50,
+                        color: Colors.white.withOpacity(0.2),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: IconButton(
+                                icon: const Icon(Icons.close, color: Colors.white),
+                                onPressed: () => controller.cancelFromGrid(user),
+                              ),
+                            ),
+                            Container(width: 1, height: 25, color: Colors.white30),
+                            Expanded(
+                              child: IconButton(
+                                icon: const Icon(Icons.thumb_up, color: Colors.white),
+                                onPressed: () => controller.connectFromGrid(user),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+/*  Widget _userCard(SwipeController controller,UserData user,int index) {
     return InkWell(
       onTap: (){
         Get.toNamed(AppRoutes.ewProfileDetail,arguments: {'id': user.id,"isMy":false})?.then((value) {
-          // controller.refreshHome();
+           controller.fetchProfiles();
         });
       },
       child:
@@ -217,7 +410,7 @@ class SwipeCardScreen extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         image: DecorationImage(
-          image: NetworkImage(user.profile!),
+          image: NetworkImage(user.profile??user.additionalImages![0]),
           fit: BoxFit.cover,
         ),
       ),
@@ -264,7 +457,7 @@ class SwipeCardScreen extends StatelessWidget {
                       child: IconButton(
                         icon: const Icon(Icons.close, color: Colors.white),
                         onPressed: () {
-                          controller.cancelFromGrid(index);
+                          controller.cancelFromGrid(user);
                         },
                       ),
                     ),
@@ -275,7 +468,7 @@ class SwipeCardScreen extends StatelessWidget {
                       child: IconButton(
                         icon: const Icon(Icons.thumb_up, color: Colors.white),
                         onPressed: () {
-                          controller.connectFromGrid(index);
+                          controller.connectFromGrid(user);
                         },
                       ),
                     ),
@@ -287,5 +480,5 @@ class SwipeCardScreen extends StatelessWidget {
         ],
       ),
     ));
-  }
+  }*/
 }

@@ -5,6 +5,7 @@ import 'package:Out2Do/api/storage_helper.dart';
 import 'package:Out2Do/models/HobbyModel.dart';
 import 'package:Out2Do/models/event_model.dart';
 import 'package:Out2Do/models/my_business_model.dart';
+import 'package:Out2Do/utils/my_progress_bar.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -12,6 +13,7 @@ import 'package:http/http.dart' as http;
 import '../models/add_business_response_model.dart';
 import '../models/blocked_user_model.dart';
 import '../models/business_model.dart';
+import '../models/chat_responseModel.dart';
 import '../models/dynamic_page_model.dart';
 import '../models/ethnicity_model.dart';
 import '../models/faq_model.dart';
@@ -24,9 +26,11 @@ import 'package:get/get.dart';
 
 import '../routes/app_routes.dart';
 import '../utils/common_styles.dart';
+import '../views/home/tabs/connect/widgets/match_dialog.dart';
 
 class ApiService {
-  static const String baseUrl = "https://out2day.brickandwallsinc.com/api";
+ // static const String baseUrl = "https://out2day.brickandwallsinc.com/api";
+  static const String baseUrl = "https://out2day.com/api";
  // static const String imageBaseUrl = "https://out2day.brickandwallsinc.com/";
 
   Future<bool> isConnected() async {
@@ -103,6 +107,7 @@ class ApiService {
 
   Future<bool> createProfileApi({
     required Map<String, String> body,
+    required List<dynamic> images,
     File? profileImage,
     Uint8List? webImageBytes,
   }) async {
@@ -133,6 +138,22 @@ class ApiService {
       } else if (profileImage != null) {
         // 📱 Mobile ke liye path use karein
         request.files.add(await http.MultipartFile.fromPath('profile', profileImage.path));
+      }
+
+      for (var image in images) {
+        if (kIsWeb) {
+          request.files.add(http.MultipartFile.fromBytes(
+            'additional_images[]',
+            image as Uint8List,
+            filename: 'upload_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          ));
+        } else {
+          File file = image as File;
+          request.files.add(await http.MultipartFile.fromPath(
+            'additional_images[]',
+            file.path,
+          ));
+        }
       }
 
       // 6. Send and Get Response
@@ -259,6 +280,7 @@ class ApiService {
           }
           return true;
         } else {
+          _handleUnauthorized(responseData["message"]);
           throw Exception(responseData['message'] ?? "Something went wrong");
         }
       }
@@ -284,7 +306,7 @@ class ApiService {
 
 
 
-  Future<int> loginApi({required String countryCode, required String phone}) async {
+  Future<int> loginApi({required String countryCode, required String phone,required String deviceToken}) async {
     try {
       var response = await http.post(
         Uri.parse("$baseUrl/login"),
@@ -295,6 +317,7 @@ class ApiService {
         body: json.encode({
           'country_code': countryCode,
           'phone': phone,
+          'device_token': deviceToken,
         }),
       );
       print("url $countryCode");
@@ -340,6 +363,8 @@ class ApiService {
         throw "Session expired. Please login again.";
       }
 
+      print("token  $token");
+
       final response = await http.post(
         Uri.parse("$baseUrl/home"),
         headers: {
@@ -361,10 +386,7 @@ class ApiService {
           List<dynamic> usersJson = responseData['users'];
           return usersJson.map((json) => UserData.fromJson(json)).toList();
         } else {
-          if(responseData["message"] == "Unauthorized"){
-            StorageProvider.clearStorage();
-            Get.offAllNamed(AppRoutes.login);
-          }
+          _handleUnauthorized(responseData["message"]);
           // Backend da message throw karo (e.g. status 0)
           throw responseData['message'] ?? "No users found.";
         }
@@ -411,10 +433,7 @@ class ApiService {
           // Response vich key 'profile_details' hai, usnu UserData vich map karo
           return UserData.fromJson(responseData['profile_details']);
         } else {
-          if(responseData["message"] == "Unauthorized"){
-            StorageProvider.clearStorage();
-            Get.offAllNamed(AppRoutes.login);
-          }
+          _handleUnauthorized(responseData["message"]);
           throw responseData['message'] ?? "Profile not found.";
         }
       } else {
@@ -475,10 +494,7 @@ class ApiService {
         if (responseData['status'] == 1) {
           return true; // ✅ Poora model return karo
         } else {
-          if(responseData["message"] == "Unauthorized"){
-            StorageProvider.clearStorage();
-            Get.offAllNamed(AppRoutes.login);
-          }
+          _handleUnauthorized(responseData["message"]);
           throw responseData['message'] ?? "Failed to create event";
         }
       } else {
@@ -545,10 +561,7 @@ class ApiService {
           print("Update Response: $responseData");
           return true;
         } else {
-          if (responseData["message"] == "Unauthorized") {
-            StorageProvider.clearStorage();
-            Get.offAllNamed(AppRoutes.login);
-          }
+          _handleUnauthorized(responseData["message"]);
           throw responseData['message'] ?? "Failed to create event";
         }
       } else {
@@ -576,14 +589,12 @@ class ApiService {
       );
 
       var responseData = json.decode(response.body);
+      print("EvsntsData $responseData");
 
       if (response.statusCode == 200) {
         return EventResponseModel.fromJson(responseData);
       } else {
-        if(responseData["message"] == "Unauthorized"){
-          StorageProvider.clearStorage();
-          Get.offAllNamed(AppRoutes.login);
-        }
+        _handleUnauthorized(responseData["message"]);
         throw responseData['message'] ?? "Server Error";
       }
     } catch (e) {
@@ -617,10 +628,7 @@ class ApiService {
       if (response.statusCode == 200) {
         return MyEventResponseModel.fromJson(responseData);
       } else {
-        if(responseData["message"] == "Unauthorized"){
-          StorageProvider.clearStorage();
-          Get.offAllNamed(AppRoutes.login);
-        }
+        _handleUnauthorized(responseData["message"]);
         throw responseData['message'] ?? "Server Error";
       }
     } catch (e) {
@@ -631,22 +639,22 @@ class ApiService {
 
   Future<BusinessResponseModel> fetchAllBusinesses() async {
     final token = StorageProvider.getToken();
+    print("deviceToken $token");
     try {
       final response = await http.get(
-        Uri.parse("https://out2day.brickandwallsinc.com/api/all-businesses"),
+        Uri.parse("$baseUrl/all-businesses"),
         headers: {
           'Accept': 'application/json',
           'Authorization': 'Bearer $token',
         },
       );
       var responseData = json.decode(response.body);
+      print("AllBusiness ${responseData}");
+      print("AllBusiness ${response.statusCode}");
       if (response.statusCode == 200) {
         return BusinessResponseModel.fromJson(json.decode(response.body));
       } else {
-        if(responseData["message"] == "Unauthorized"){
-          StorageProvider.clearStorage();
-          Get.offAllNamed(AppRoutes.login);
-        }
+        _handleUnauthorized(responseData["message"]);
         throw "Failed to load businesses";
       }
     } catch (e) {
@@ -681,10 +689,7 @@ class ApiService {
       if (response.statusCode == 200) {
         return MyBusinessResponseModel.fromJson(responseData);
       } else {
-        if(responseData["message"] == "Unauthorized"){
-          StorageProvider.clearStorage();
-          Get.offAllNamed(AppRoutes.login);
-        }
+        _handleUnauthorized(responseData["message"]);
         throw responseData['message'] ?? "Server Error";
       }
     } catch (e) {
@@ -729,8 +734,6 @@ class ApiService {
       var response = await http.Response.fromStream(streamedResponse);
 
       var responseData = json.decode(response.body);
-      print("Create Business Response: $responseData");
-
       // 🔥 Model vich convert karo
       AddBusinessResponse businessRes = AddBusinessResponse.fromJson(responseData);
 
@@ -756,7 +759,7 @@ class ApiService {
 
 // 🔐 Unauthorized handle karan layi chota helper
   void _handleUnauthorized(String? message) {
-    if (message == "Unauthorized") {
+    if (message!=null && message.toLowerCase() == "unauthorized") {
       StorageProvider.clearStorage();
       Get.offAllNamed(AppRoutes.login);
     }
@@ -821,10 +824,11 @@ class ApiService {
        //   showCommonSnackbar(title: "Success", message: responseData['message'] ?? "Updated!");
           return true;
         } else {
-          if (responseData["message"] == "Unauthorized") {
+          _handleUnauthorized(responseData["message"]);
+       /*   if (responseData["message"] == "Unauthorized") {
             StorageProvider.clearStorage();
             Get.offAllNamed(AppRoutes.login);
-          }
+          }*/
           // Status 0 case: Backend da error message dikhao
           showCommonSnackbar(title: "Error", message: responseData['message'] ?? "Something went wrong");
           return false;
@@ -1027,10 +1031,7 @@ class ApiService {
         if (responseData['status'] == 1) {
           return BlockedUsersResponse.fromJson(responseData);
         } else {
-          if (responseData["message"] == "Unauthorized") {
-            StorageProvider.clearStorage();
-            Get.offAllNamed(AppRoutes.login);
-          }
+          _handleUnauthorized(responseData["message"]);
           throw responseData['message'] ?? "Failed to load blocked users";
         }
       } else if (response.statusCode == 401) {
@@ -1073,10 +1074,7 @@ class ApiService {
           showCommonSnackbar(title: "Success", message: responseData['message'] ?? "User unblocked");
           return true;
         } else {
-          if (responseData["message"] == "Unauthorized") {
-            StorageProvider.clearStorage();
-            Get.offAllNamed(AppRoutes.login);
-          }
+          _handleUnauthorized(responseData["message"]);
           throw responseData['message'] ?? "Failed to unblock user";
         }
       } else if (response.statusCode == 401) {
@@ -1120,10 +1118,7 @@ class ApiService {
           showCommonSnackbar(title: "Success", message: responseData['message'] ?? "User unblocked");
           return true;
         } else {
-          if (responseData["message"] == "Unauthorized") {
-            StorageProvider.clearStorage();
-            Get.offAllNamed(AppRoutes.login);
-          }
+          _handleUnauthorized(responseData["message"]);
           throw responseData['message'] ?? "Failed to unblock user";
         }
       } else if (response.statusCode == 401) {
@@ -1194,14 +1189,13 @@ class ApiService {
 
       var responseData = json.decode(response.body);
 
+      print("RecentMatches  $responseData");
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (responseData['status'] == 1) {
           return MyMatchesResponse.fromJson(responseData);
         } else {
-          if (responseData["message"] == "Unauthorized") {
-            StorageProvider.clearStorage();
-            Get.offAllNamed(AppRoutes.login);
-          }
+          _handleUnauthorized(responseData["message"]);
           throw responseData['message'] ?? "Failed to load matches";
         }
       } else if (response.statusCode == 401) {
@@ -1267,6 +1261,8 @@ class ApiService {
   }
 
 
+
+
   Future<Map<String, dynamic>> markUserInterested({
     required String interestedId,
   }) async {
@@ -1278,20 +1274,24 @@ class ApiService {
         Uri.parse("$baseUrl/mark-interested"),
         headers: {
           'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: {
+        body: json.encode({
           'user_id': userId,
           'interested_id': interestedId,
-        },
+        }),
       ).timeout(const Duration(seconds: 15)); // Timeout add kiya
 
       final responseData = json.decode(response.body);
 
       if (response.statusCode == 200) {
         if (responseData['status'] == 1) {
+          print("Response Status: ${response.statusCode}");
+          print("Response Body: ${response.body}");
           return responseData;
         } else {
+          _handleUnauthorized(responseData["message"]);
           // API level error (e.g. Already interested)
           throw responseData['message'] ?? "Something went wrong";
         }
@@ -1309,6 +1309,57 @@ class ApiService {
     } catch (e) {
       // Baaki kisi bhi tarah ki error ke liye
       rethrow;
+    }
+  }
+
+
+
+  Future<ChatResponseModel> fetchFirebaseChats() async {
+    try {
+      final String? token = StorageProvider.getToken();
+      final String userId = StorageProvider.getUserData()!.id!.toString();
+
+      if (token == null || token.isEmpty) {
+        throw "Authentication token not found. Please login again.";
+      }
+
+      final response = await http.get(
+        Uri.parse("$baseUrl/get-firebase-chats?user_id=$userId"),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 15)); // Timeout handle karne ke liye
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+      switch (response.statusCode) {
+        case 200:
+          if (responseData['status'] == 1) {
+            return ChatResponseModel.fromJson(responseData);
+          } else {
+            _handleUnauthorized(responseData["message"]);
+            // Backend se aane wala custom error message
+            throw responseData['message'] ?? "Something went wrong";
+          }
+        case 401:
+        // Token expire ho gaya
+          throw "Session expired. Please login again.";
+        case 404:
+          throw "Server not found. Please try again later.";
+        case 500:
+          throw "Internal Server Error. Please contact support.";
+        default:
+          throw "Error: ${response.statusCode} ${responseData['message'] ?? ""}";
+      }
+    } on SocketException {
+      throw "No Internet connection. Please check your network.";
+    } on TimeoutException {
+      throw "Request timed out. Server is not responding.";
+    } on FormatException {
+      throw "Invalid response format from server.";
+    } catch (e) {
+      throw e.toString();
     }
   }
 

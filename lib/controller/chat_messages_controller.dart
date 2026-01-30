@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:Out2Do/models/user_model.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -14,12 +15,11 @@ import '../utils/my_progress_bar.dart';
 import 'firebase_status_controller.dart';
 
 class ChatMessagesController extends GetxController {
-  final messages = <ChatMessage>[].obs;
+ // final messages = <ChatMessage>[].obs;
   final scrollController = ScrollController();
 
-  final userName = "Sophia";
-  final userImage =
-      "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e";
+  final userName = "";
+  final userImage = "";
 
   var isBlocked = false.obs;
 
@@ -28,10 +28,10 @@ class ChatMessagesController extends GetxController {
     // Ithe tusi apni block wali API call vi kar sakde ho
   }
 
-//  final MessagesService _service = MessagesService();
+  final MessagesService _service = MessagesService();
 
   TextEditingController textController = TextEditingController();
-/*  final Rxn<UserData> sender = Rxn<UserData>();
+  final Rxn<UserData> sender = Rxn<UserData>();
   final Rxn<UserData> receiver = Rxn<UserData>();
   var requestId = "".obs;
   var receiverUnreadCount = 0.obs;
@@ -55,13 +55,13 @@ class ChatMessagesController extends GetxController {
   var lastSeenMessage = ''.obs;
 
   var isTyping = false.obs;
-  Timer? _typingTimer;*/
+  Timer? _typingTimer;
 
   @override
   void onInit() {
     super.onInit();
 
-   /* var args = Get.arguments as Map;
+    var args = Get.arguments as Map;
     sender.value = UserData.fromJson(args["sender"] as Map<String, dynamic>);
     receiver.value =
         UserData.fromJson(args["receiver"] as Map<String, dynamic>);
@@ -70,13 +70,11 @@ class ChatMessagesController extends GetxController {
     } else {
       requestId.value = "${receiver.value?.id}_${sender.value?.id}";
     }
-    debugPrint("Sender : ${sender.value?.firstName!}");
-    debugPrint("Receiver : ${receiver.value?.firstName}");
     initialState();
-    textController.addListener(_onTextChanged);*/
+    textController.addListener(_onTextChanged);
 
     /// Dummy chat
-    messages.addAll([
+  /*  messages.addAll([
       ChatMessage(
         message: "Hey 👋",
         isMe: false,
@@ -147,13 +145,13 @@ class ChatMessagesController extends GetxController {
         isMe: false,
         time: "10:32 AM",
       ),
-    ]);
+    ]);*/
   }
 
 
 
 
-/*  void _onTextChanged() {
+  void _onTextChanged() {
     if (textController.text.isNotEmpty) {
       if (!isTyping.value) {
         isTyping.value = true; // user started typing
@@ -176,17 +174,17 @@ class ChatMessagesController extends GetxController {
       debugPrint("Typing Status : User stopped typing...");
       Get.find<FirebaseStatusController>().setTypingStatus(receiverId: 0);
     }
-  }*/
+  }
 
-/*  Future<void> initialState() async {
+  Future<void> initialState() async {
     await _service.initializeFirebaseUser();
     await getMessages();
     await updateMyUnreadCount();
     await getReceiverUnreadCount();
     await getReceiverStatus();
-  }*/
+  }
 
-  void sendMessage() {
+/*  void sendMessage() {
     if (textController.text.trim().isEmpty) return;
 
     messages.add(
@@ -206,10 +204,10 @@ class ChatMessagesController extends GetxController {
         curve: Curves.easeOut,
       );
     });
-  }
+  }*/
 
 
- /* Future<void> sendMessage() async {
+  Future<void> sendMessage() async {
     if (textController.text.trim().isEmpty) return;
 
 
@@ -246,19 +244,19 @@ class ChatMessagesController extends GetxController {
         .child("id_${sender.value?.id}")
         .update(body2);
 
-   *//* if ((receiver.value?.deviceToken ?? "").isNotEmpty) {
+    if ((receiver.value?.deviceToken ?? "").isNotEmpty) {
       sendNotification(message: textController.text.trim());
-    }*//*
+    }
     textController.text = "";
 
-  }*/
+  }
 
-/*  Future<void> sendNotification({required String message}) async {
+  Future<void> sendNotification({required String message}) async {
     var body = jsonEncode(<String, dynamic>{
       'message': {
         'token': receiver.value?.deviceToken ?? "",
         'notification': {
-          'title': sender.value?.name ?? "",
+          'title': sender.value?.firstName ?? "",
           'body': message,
         },
         'data': {
@@ -270,9 +268,9 @@ class ChatMessagesController extends GetxController {
     });
     log("Notification Body : $body");
     _service.sendNotification(body);
-  }*/
+  }
 
-/*  Future<void> getMessages() async {
+  Future<void> getMessages() async {
     var context = Get.context!;
     try {
       if (isFirstLaunch.value) {
@@ -381,18 +379,18 @@ class ChatMessagesController extends GetxController {
     } catch (e) {
       debugPrint("Error getting receiver status : $e");
     }
-  }*/
+  }
 
   @override
   void onClose() {
     scrollController.dispose();
-    messages.clear();
-  /*  _messagesListener.cancel();
+  //  messages.clear();
+    _messagesListener.cancel();
     _myUnreadCountListener.cancel();
     _receiverUnreadCountListener.cancel();
-    _receiverStatusListener.cancel();*/
+    _receiverStatusListener.cancel();
     textController.dispose();
-  //  _typingTimer?.cancel();
+    _typingTimer?.cancel();
     super.onClose();
   }
 }

@@ -1,3 +1,4 @@
+import 'package:Out2Do/api/storage_helper.dart';
 import 'package:Out2Do/models/user_model.dart';
 import 'package:Out2Do/routes/app_routes.dart';
 import 'package:flutter/material.dart';
@@ -7,12 +8,23 @@ import '../../../../../utils/colors.dart';
 
 class MatchDialog extends StatelessWidget {
   final UserData profile;
+  final VoidCallback onKeepSwiping; // 👈 New
+  final VoidCallback onSendMessage; // 👈 New
 
-  const MatchDialog({super.key, required this.profile});
+  const MatchDialog({super.key, required this.profile,
+    required this.onKeepSwiping,
+    required this.onSendMessage});
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
+    return PopScope(
+        canPop: true,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) {
+            onKeepSwiping(); // Agar user back kare ya bahar click kare toh controller update ho
+          }
+        },
+        child: Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 20),
       child: TweenAnimationBuilder<double>(
@@ -88,21 +100,20 @@ class MatchDialog extends StatelessWidget {
 
               /// 🚀 Action Buttons
               _buildButton("Send a Message", MyColors.baseColor, MyColors.white, () {
-                Get.back();
-                Get.toNamed(AppRoutes.chatMessages);
+                onSendMessage();
                 // Navigate to Chat logic here
               }),
 
               const SizedBox(height: 12),
 
               _buildButton("Keep Swiping", MyColors.white, MyColors.baseColor, () {
-                Get.back();
+                onKeepSwiping();
               }, isBorder: true),
             ],
           ),
         ),
       ),
-    );
+    ));
   }
 
   /// Overlapping Circle Avatars with Slide Animation
@@ -120,7 +131,7 @@ class MatchDialog extends StatelessWidget {
             builder: (context, value, child) {
               return Positioned(
                 right: value,
-                child: _avatarCircle(profile.profile!),
+                child: _avatarCircle(profile.profile??profile.additionalImages![0]),
               );
             },
           ),
@@ -131,7 +142,7 @@ class MatchDialog extends StatelessWidget {
             builder: (context, value, child) {
               return Positioned(
                 left: value,
-                child: _avatarCircle("https://picsum.photos/200"), // Dummy User Image
+                child: _avatarCircle(StorageProvider.getUserData()!.profile?? StorageProvider.getUserData()!.additionalImages![0]), // Dummy User Image
               );
             },
           ),

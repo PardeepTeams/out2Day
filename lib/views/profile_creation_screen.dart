@@ -711,40 +711,6 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen>
 
 
 
-  Widget _buildCreateSinglePhoto(BuildContext context) {
-    return Obx(() {
-      ImageProvider? imageProvider;
-      if (kIsWeb && controller.webImage.value != null) {
-        imageProvider = MemoryImage(controller.webImage.value!);
-      } else if (!kIsWeb && controller.profileImage.value != null) {
-        imageProvider = FileImage(controller.profileImage.value!);
-      }
-
-      return GestureDetector(
-        onTap: () => showImageSourceSheet(
-          onImageSelected: (source) => controller.pickImage(source),
-        ),
-        child: Stack(
-          alignment: Alignment.bottomRight,
-          children: [
-            CircleAvatar(
-              radius: 55,
-              backgroundColor: MyColors.greyFilled2,
-              backgroundImage: imageProvider,
-              child: imageProvider == null
-                  ? const Icon(Icons.person, size: 50, color: MyColors.grey4)
-                  : null,
-            ),
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: const BoxDecoration(color: MyColors.baseColor, shape: BoxShape.circle),
-              child: const Icon(Icons.camera_alt, size: 18, color: MyColors.white),
-            ),
-          ],
-        ),
-      );
-    });
-  }
 
   /// ➕ ADD BUTTON WIDGET
   Widget _buildAddButton(BuildContext context) {
@@ -767,11 +733,11 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen>
     ImageProvider? imageProvider;
     bool isNetwork = false;
 
-    if (index < controller.networkImages.length) {
-      imageProvider = NetworkImage("${controller.networkImages[index]}");
+    if (index < controller.networkThumbImages.length) {
+      imageProvider = NetworkImage("${controller.networkThumbImages[index]}");
       isNetwork = true;
     } else {
-      int localIndex = index - controller.networkImages.length;
+      int localIndex = index - controller.networkThumbImages.length;
       imageProvider = kIsWeb
           ? MemoryImage(controller.additionalWebImages[localIndex])
           : FileImage(controller.additionalImages[localIndex]);
@@ -836,7 +802,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen>
         SizedBox(
           height: 110,
           child: Obx(() {
-            int networkCount = controller.networkImages.length;
+            int networkCount = controller.networkThumbImages.length;
             int localCount = kIsWeb ? controller.additionalWebImages.length : controller.additionalImages.length;
             int total = networkCount + localCount;
 
@@ -882,57 +848,61 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen>
           ImageProvider? imageProvider;
 
           // 1️⃣ Web picked image
-          if (kIsWeb && controller.webImage.value != null) {
-            imageProvider = MemoryImage(controller.webImage.value!);
+          if (kIsWeb && controller.additionalWebImages.isNotEmpty) {
+            imageProvider = MemoryImage(controller.additionalWebImages[0]);
           }
           // 2️⃣ Mobile picked image
-          else if (!kIsWeb && controller.profileImage.value != null) {
-            imageProvider = FileImage(controller.profileImage.value!);
+          else if (!kIsWeb && controller.additionalImages.isNotEmpty) {
+            imageProvider = FileImage(controller.additionalImages[0]);
           }
           // 3️⃣ Existing network image (Edit mode)
-          else if (controller.profileImageUrl.value.isNotEmpty) {
-            imageProvider = NetworkImage(controller.profileImageUrl.value);
+          else if (controller.networkImages.isNotEmpty) {
+            imageProvider = NetworkImage(controller.networkImages[0]);
+          }
+          if(!controller.isEdit){
+            return GestureDetector(
+              onTap: () {
+                dismissKeyboard(context);
+                showImageSourceSheet(
+                  onImageSelected: (source) => controller.pickImage(source),
+                );
+              },
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  CircleAvatar(
+                    radius: 55,
+                    backgroundColor: MyColors.greyFilled2,
+                    backgroundImage: imageProvider,
+                    child: imageProvider == null
+                        ? const Icon(
+                      Icons.person,
+                      size: 50,
+                      color: MyColors.grey4,
+                    )
+                        : null,
+                  ),
+
+                  /// 📷 Camera Icon
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: MyColors.baseColor,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      size: 18,
+                      color: MyColors.white,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }else{
+            return _buildEditPhotoList(context);
           }
 
-          return GestureDetector(
-            onTap: () {
-              dismissKeyboard(context);
-              showImageSourceSheet(
-                onImageSelected: (source) => controller.pickImage(source),
-              );
-            },
-            child: Stack(
-              alignment: Alignment.bottomRight,
-              children: [
-                CircleAvatar(
-                  radius: 55,
-                  backgroundColor: MyColors.greyFilled2,
-                  backgroundImage: imageProvider,
-                  child: imageProvider == null
-                      ? const Icon(
-                          Icons.person,
-                          size: 50,
-                          color: MyColors.grey4,
-                        )
-                      : null,
-                ),
-
-                /// 📷 Camera Icon
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: const BoxDecoration(
-                    color: MyColors.baseColor,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.camera_alt,
-                    size: 18,
-                    color: MyColors.white,
-                  ),
-                ),
-              ],
-            ),
-          );
         }),
 
         commonTextFieldLargeGap(),
@@ -995,18 +965,18 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen>
           controller: controller.aboutController,
           hintText: AppStrings.aboutHint,
           maxLines: 4,
-          //   keyboardType: TextInputType.multiline,
-          textCapitalization: TextCapitalization.words,
+            keyboardType: TextInputType.multiline, // 👈 Ye iOS Web ke liye mandatory hai
+            textInputAction: TextInputAction.newline
         ),
 
 
 
-        controller.isEdit ?commonTextFieldLargeGap():SizedBox(),
+/*        controller.isEdit ?commonTextFieldLargeGap():SizedBox(),
         controller.isEdit ? Align(
           alignment: AlignmentGeometry.centerLeft,
           child: regularText(AppStrings.additionalImages),
         ):SizedBox(),
-        controller.isEdit ? _buildEditPhotoList(context) : SizedBox(),
+        controller.isEdit ? _buildEditPhotoList(context) : SizedBox(),*/
 
         commonButtonGap(),
       ],

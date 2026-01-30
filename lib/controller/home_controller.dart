@@ -19,7 +19,6 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    getToken();
   }
 
   void changeTab(int index) {
@@ -47,12 +46,5 @@ class HomeController extends GetxController {
     }
   }
 
-  void getToken()async {
-    FirebaseMessaging messaging = FirebaseMessaging.instance;
-    String? token = await messaging.getToken(
-        vapidKey: "BERopO2oEVrT8bDna0UeU3UaGNgAlSUH6Gfc2TVUZQZ5J8iNPwuXFY2nzXbXxixc-vmhhYQeZga44Pgciv7jN14"
-    );
 
-    print("token  $token");
-  }
 }

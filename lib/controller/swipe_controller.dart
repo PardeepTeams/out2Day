@@ -1,9 +1,12 @@
+import 'package:Out2Do/api/storage_helper.dart';
 import 'package:get/get.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 
 import '../api/api_service.dart';
 import '../models/user_model.dart';
+import '../routes/app_routes.dart';
 import '../utils/common_styles.dart';
+import '../utils/my_progress_bar.dart';
 import '../views/home/tabs/connect/widgets/match_dialog.dart';
 
 class SwipeController extends GetxController {
@@ -83,42 +86,74 @@ class SwipeController extends GetxController {
     }
   }
 
-  void handleUserAction(int index, bool isLiked) {
-    if (index < 0 || index >= profiles.length) return;
 
-    final targetUser = profiles[index];
 
-    if (isLiked) {
-      Get.dialog(
-        MatchDialog(profile: targetUser),
-        barrierDismissible: false,
-      );
-    }
 
-    profiles.removeWhere((user) => user.id == targetUser.id);
-    gridProfiles.removeWhere((user) => user.id == targetUser.id);
 
+
+  void removeFromGridLists(int userId) {
+    gridProfiles.removeWhere((user) => user.id == userId);
+
+    gridProfiles.refresh();
   }
 
-  // Jadon card swipe hunda hai
+  void handleUserAction(UserData targetUser, bool isLiked) {
+    if (isLiked) {
+      markInterestedAndHandleMatch(targetUser);
+    }
+  }
+
+
+  Future<void> markInterestedAndHandleMatch(UserData user) async {
+    try {
+      MyProgressBar.showLoadingDialog(context: Get.context!);
+
+      final response = await ApiService().markUserInterested(
+        interestedId: user.id.toString(),
+      );
+      MyProgressBar.hideLoadingDialog(context: Get.context!);
+      if (response['status'] == 1) {
+        if (response['match'] == true) {
+          Get.dialog(
+            MatchDialog(profile: user, onKeepSwiping: () {
+              Get.back();
+            },
+              onSendMessage: ()async  {
+              Get.back();
+              await Future.delayed(const Duration(milliseconds: 100));
+                await Get.toNamed(
+                    AppRoutes.chatMessages,
+                   arguments: <String, dynamic>{
+                  'sender': StorageProvider.getUserData()!.toJson(),
+                  'receiver': user.toJson(),
+                }
+                );
+                fetchProfiles();
+              },),
+            barrierDismissible: false,
+          );
+        }
+        removeFromGridLists(user.id!);
+      }else{
+        print("MatchError $response}");
+      }
+
+    } catch (e) {
+      MyProgressBar.hideLoadingDialog(context: Get.context!);
+      print("MatchResponse  $e");
+    }
+  }
+
   bool onSwipe(int previousIndex, int? currentIndex, CardSwiperDirection direction) {
     if (direction == CardSwiperDirection.right || direction == CardSwiperDirection.left) {
       commonIndex.value = currentIndex ?? profiles.length;
-      final swipedProfile = profiles[previousIndex];
 
-      gridProfiles.removeWhere((user) => user.id == swipedProfile.id);
+      final swipedUser = profiles[previousIndex];
       if (direction == CardSwiperDirection.right) {
-         Get.dialog(
-        MatchDialog(profile: swipedProfile),
-        barrierDismissible: false,
-      );
-
-        // API Call ithe karo: controller.likeUser(swipedUser['id']);
-      } else if (direction == CardSwiperDirection.left) {
-        // print("Disliked: ${swipedProfile['name']}");
-        gridProfiles.remove(profiles[previousIndex]);
+        markInterestedAndHandleMatch(swipedUser);
+      }else{
+        removeFromGridLists(swipedUser.id!);
       }
-
       return true;
     }else{
       return false;
@@ -127,12 +162,19 @@ class SwipeController extends GetxController {
   }
 
 
-
-  void connectFromGrid(int index) {
-    handleUserAction(index, true);
+  void connectFromGrid(UserData user) {
+    int swipeIndex = profiles.indexWhere((element) => element.id == user.id);
+    if (swipeIndex != -1) {
+      swiperController.swipe(CardSwiperDirection.right);
+    }
+    handleUserAction(user, true);
   }
 
-  void cancelFromGrid(int index) {
-    handleUserAction(index, false);
+  void cancelFromGrid(UserData user) {
+    int swipeIndex = profiles.indexWhere((element) => element.id == user.id);
+    if (swipeIndex != -1) {
+      swiperController.swipe(CardSwiperDirection.left);
+    }
+    handleUserAction(user, false);
   }
 }

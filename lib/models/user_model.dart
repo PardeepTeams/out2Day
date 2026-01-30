@@ -30,11 +30,12 @@ class UserData {
   // 🔹 Name hata ke first_name aur last_name add kitta, aur hobbies add kiti
   String? firstName, lastName, hobbies, email, countryCode, gender,
       latitude, longitude, profile, interests, dob, address, city,
-      country, height, ethnicity, profession, aboutMe,phone, drinking,smoking;
+      country, height, ethnicity, profession, aboutMe,phone, drinking,smoking,deviceToken;
   int?  role;
-  double? distnace;
+  String? distnace;
 //  dynamic? isBusiness;
   List<String>? additionalImages;
+  List<String>? additionalImagesThumb;
 
 
   UserData({
@@ -64,6 +65,8 @@ class UserData {
     this.smoking,
     this.distnace,
     this.additionalImages,
+    this.additionalImagesThumb,
+    this.deviceToken,
   });
 
   UserData.fromJson(Map<String, dynamic> json) {
@@ -93,8 +96,12 @@ class UserData {
     drinking = json['drinking'];
     smoking = json['smoking'];
     distnace = json["distance"];
+    deviceToken = json["device_token"];
     if (json['additional_images'] != null) {
       additionalImages = List<String>.from(json['additional_images']);
+    }
+    if(json["additional_images_thumb"]!=null){
+      additionalImagesThumb = List<String>.from(json['additional_images_thumb']);
     }
   }
 
@@ -126,6 +133,8 @@ class UserData {
       'smoking': smoking,
       'distance': distnace,
       'additional_images': additionalImages,
+      'additional_images_thumb': additionalImagesThumb,
+      'device_token': deviceToken,
     };
   }
 }

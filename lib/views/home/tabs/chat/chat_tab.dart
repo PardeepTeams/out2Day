@@ -1,3 +1,4 @@
+import 'package:Out2Do/models/chat_responseModel.dart';
 import 'package:Out2Do/models/user_model.dart';
 import 'package:Out2Do/utils/app_strings.dart';
 import 'package:Out2Do/widgets/common_home_app_bar.dart';
@@ -22,60 +23,72 @@ class ChatTab extends StatelessWidget {
     return Scaffold(
       backgroundColor: MyColors.white,
       appBar: CommonHomeAppBar(),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: mediumTextLarge(
-              AppStrings.recentMatch,
-              MyColors.baseColor
+      body: Obx((){
+        if(controller.isLoading.value){
+          return Center(
+            child: CircularProgressIndicator(
+              color: MyColors.baseColor,
             ),
-          ),
-
-          const SizedBox(height: 6),
-          SizedBox(
-            height: 60,
-            child: ListView.builder(
+          );
+        }
+       return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            controller.matchesList.isNotEmpty?
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              scrollDirection: Axis.horizontal,
-              itemCount: controller.recentMatches.length,
-              itemBuilder: (context, index) {
-                return _recentMatchItem(controller.recentMatches[index]);
-              },
-            ),
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: mediumTextLarge(
-                AppStrings.messages,
-                MyColors.baseColor
-            ),
-          ),
-          const SizedBox(height: 6),
-          Expanded(child: Obx(() {
-            if (controller.chats.isEmpty) {
-              return Center(child: regularText(AppStrings.noChats));
-            }
+              child: mediumTextLarge(
+                  AppStrings.recentMatch,
+                  MyColors.baseColor
+              ),
+            ):SizedBox(),
 
-            return ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-              itemCount: controller.chats.length,
-              separatorBuilder: (_, __) => const Divider(height: 20),
-              itemBuilder: (_, index) {
-                final chat = controller.chats[index];
+            const SizedBox(height: 6),
+            SizedBox(
+              height: 60,
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                scrollDirection: Axis.horizontal,
+                itemCount: controller.matchesList.length,
+                itemBuilder: (context, index) {
+                  return _recentMatchItem(controller.matchesList[index]);
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            controller.chats.isEmpty?
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: mediumTextLarge(
+                  AppStrings.messages,
+                  MyColors.baseColor
+              ),
+            ):SizedBox(),
+            const SizedBox(height: 6),
+            Expanded(child: Obx(() {
+              if (controller.chats.isEmpty) {
+                return Center(child: regularText(AppStrings.noChats));
+              }
 
-                return InkWell(
-                  onTap: () => controller.openChat(index),
-                  borderRadius: BorderRadius.circular(16),
-                  child: _messageTile(chat)
-                );
-              },
-            );
-          }))
-        ],
-      )
+              return ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+                itemCount: controller.chats.length,
+                separatorBuilder: (_, __) => const Divider(height: 20),
+                itemBuilder: (_, index) {
+                  final chat = controller.chats[index];
+
+                  return InkWell(
+                      onTap: () => controller.openChat(index),
+                      borderRadius: BorderRadius.circular(16),
+                      child: _messageTile(chat)
+                  );
+                },
+              );
+            }))
+          ],
+        );
+      })
+
       ,
     );
   }
@@ -138,10 +151,10 @@ class ChatTab extends StatelessWidget {
   }*/
 
 
-  Widget _recentMatchItem(Map<String,Object> data) {
+  Widget _recentMatchItem(UserData data) {
     return InkWell(
         onTap: (){
-        //  controller.openRecentChat(data);
+          controller.openRecentChat(data);
         },
         child:Padding(
           padding: const EdgeInsets.only(right: 12),
@@ -152,12 +165,10 @@ class ChatTab extends StatelessWidget {
                 backgroundColor: Colors.grey.shade200,
                 child: ClipOval(
                   child: CachedNetworkImage(
-                    imageUrl: data["image"].toString()??"",
+                    imageUrl: data.additionalImagesThumb!.first,
                     fit: BoxFit.cover,
                     width: 64,
                     height: 64,
-
-                    // 🔹 Animation settings: Slow karan layi (1.5 seconds)
                     fadeInDuration: const Duration(milliseconds: 1500),
                     fadeOutDuration: const Duration(milliseconds: 1500),
                     fadeInCurve: Curves.easeIn, // Smooth shuruat layi
@@ -195,7 +206,14 @@ class ChatTab extends StatelessWidget {
         ));
   }
 
-  Widget _messageTile(ChatUser data) {
+  Widget _messageTile(Chat data) {
+    var imageUrl = data.receiver != controller.userDetails.value?.id
+        ? (data.receiverDetail?.additionalImagesThumb!.first ?? "")
+        : (data.senderDetail?.additionalImages!.first ?? "");
+
+    var name = data.receiver != controller.userDetails.value?.id
+        ? (data.receiverDetail?.firstName ?? "")
+        : (data.senderDetail?.firstName ?? "");
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       child: Row(
@@ -207,7 +225,7 @@ class ChatTab extends StatelessWidget {
                 backgroundColor: Colors.grey.shade200,
                 child: ClipOval(
                   child: CachedNetworkImage(
-                    imageUrl: data.image,
+                    imageUrl: imageUrl,
                     fit: BoxFit.cover,
                     width: 64,
                     height: 64,
@@ -256,12 +274,12 @@ class ChatTab extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 mediumTextLarge(
-                  data.name,
+                  name,
                   MyColors.baseColor
                 ),
                 const SizedBox(height: 4),
                 regularText2(
-                  data.lastMessage,
+                  data.message??"",
                 ),
               ],
             ),
@@ -274,10 +292,10 @@ class ChatTab extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               lightText(
-                data.time,
+                getFormattedMessageTimeHistory(timestamp: data.timestamp!),
               ),
               const SizedBox(height: 6),
-              if (data.unreadCount> 0)
+              if (data.unreadCount!=null && data.unreadCount!> 0)
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(

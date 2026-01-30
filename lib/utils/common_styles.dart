@@ -183,6 +183,7 @@ Widget mediumText(String text, Color? color) {
     ),
   );
 }
+
 Widget mediumTextSingleLine(String text, Color? color) {
   return Text(
     text,
@@ -336,8 +337,10 @@ Widget googlePlacesTextField({
     children: [
       GooglePlaceAutoCompleteTextField(
         textEditingController: controller,
-     //   googleAPIKey: "AIzaSyCFpI3IuqWxHr4rz87uT-7HO-ZIS-f1I7Y",
-        googleAPIKey: kIsWeb?"AIzaSyAvGB9QmQqympYyGAeECdbXYbHMyOfrxA4":"AIzaSyDkCan3Xw2Wrd3oQyMwjYhC56M0VEeiUTU",
+        //   googleAPIKey: "AIzaSyCFpI3IuqWxHr4rz87uT-7HO-ZIS-f1I7Y",
+        googleAPIKey: kIsWeb
+            ? "AIzaSyAvGB9QmQqympYyGAeECdbXYbHMyOfrxA4"
+            : "AIzaSyDkCan3Xw2Wrd3oQyMwjYhC56M0VEeiUTU",
         textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w400,
@@ -350,10 +353,10 @@ Widget googlePlacesTextField({
           filled: true,
           fillColor: MyColors.white,
           contentPadding: const EdgeInsets.only(
-              left: 16,
-              right: 45, // 👈 Eh padding text nu icon ton pehle rok devegi
-              top: 16,
-              bottom: 16
+            left: 16,
+            right: 45, // 👈 Eh padding text nu icon ton pehle rok devegi
+            top: 16,
+            bottom: 16,
           ),
 
           // ✅ Border Styling (CommonTextField ton copy kiti)
@@ -376,9 +379,10 @@ Widget googlePlacesTextField({
         ),
         debounceTime: 400,
         isLatLngRequired: true,
-        getPlaceDetailWithLatLng: (Prediction prediction) => onLocationClick.call(prediction),
+        getPlaceDetailWithLatLng: (Prediction prediction) =>
+            onLocationClick.call(prediction),
         itemClick: (Prediction prediction) {
-         /* controller.value = TextEditingValue(
+          /* controller.value = TextEditingValue(
             text: prediction.description ?? "",
             selection: TextSelection.fromPosition(TextPosition(offset: (prediction.description ?? "").length)),
           );*/
@@ -388,33 +392,32 @@ Widget googlePlacesTextField({
       ),
 
       // 🔥 TUHADA CUSTOM CROSS BUTTON
-      Obx(() => Visibility(
-        visible: showClearIcon.value,
-        child: Padding(
-          padding: const EdgeInsets.only(right: 12.0),
-          child: InkWell(
-            onTap: () {
-              controller.clear();
-              showClearIcon.value = false; // Icon hide karo
-            },
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: MyColors.greyFilled2.withOpacity(0.8),
-                border: Border.all(color: MyColors.borderColor, width: 1),
-                shape: BoxShape.circle,
+      Obx(
+        () => Visibility(
+          visible: showClearIcon.value,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 12.0),
+            child: InkWell(
+              onTap: () {
+                controller.clear();
+                showClearIcon.value = false; // Icon hide karo
+              },
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: MyColors.greyFilled2.withOpacity(0.8),
+                  border: Border.all(color: MyColors.borderColor, width: 1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.close, size: 14, color: MyColors.black),
               ),
-              child: const Icon(Icons.close, size: 14, color: MyColors.black),
             ),
           ),
         ),
-      )),
+      ),
     ],
   );
 }
-
-
-
 
 Widget googlePlacesTextFieldWeb({
   required TextEditingController controller,
@@ -435,30 +438,30 @@ Widget googlePlacesTextFieldWeb({
       children: [
         SizedBox(
           height: 60,
-          child: HtmlElementView(
-            viewType: 'autocomplete-input',
-          ),
+          child: HtmlElementView(viewType: 'autocomplete-input'),
         ),
-        Obx(() => Visibility(
-          visible: showClearIcon.value,
-          child: Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: InkWell(
-              onTap: () {
-                controller.clear();
-                showClearIcon.value = false;
-              },
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.8),
-                  shape: BoxShape.circle,
+        Obx(
+          () => Visibility(
+            visible: showClearIcon.value,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 12.0),
+              child: InkWell(
+                onTap: () {
+                  controller.clear();
+                  showClearIcon.value = false;
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.close, size: 14),
                 ),
-                child: const Icon(Icons.close, size: 14),
               ),
             ),
           ),
-        )),
+        ),
       ],
     );
   } else {
@@ -474,7 +477,12 @@ Widget googlePlacesTextFieldWeb({
             hintText: hint,
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.only(left: 16, right: 45, top: 16, bottom: 16),
+            contentPadding: const EdgeInsets.only(
+              left: 16,
+              right: 45,
+              top: 16,
+              bottom: 16,
+            ),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
           getPlaceDetailWithLatLng: onLocationClick,
@@ -484,26 +492,28 @@ Widget googlePlacesTextFieldWeb({
           },
           isCrossBtnShown: false,
         ),
-        Obx(() => Visibility(
-          visible: showClearIcon.value,
-          child: Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: InkWell(
-              onTap: () {
-                controller.clear();
-                showClearIcon.value = false;
-              },
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.8),
-                  shape: BoxShape.circle,
+        Obx(
+          () => Visibility(
+            visible: showClearIcon.value,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 12.0),
+              child: InkWell(
+                onTap: () {
+                  controller.clear();
+                  showClearIcon.value = false;
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.close, size: 14),
                 ),
-                child: const Icon(Icons.close, size: 14),
               ),
             ),
           ),
-        )),
+        ),
       ],
     );
   }
@@ -823,9 +833,30 @@ String getFormattedMessageTime({required int timestamp}) {
         now.year == dateTime.year) {
       return DateFormat("dd MMM 'at' hh:mm a").format(dateTime);
     } else {
-      String formattedDate =
-      DateFormat("dd-MM-yyyy 'at' hh:mm a").format(dateTime);
+      String formattedDate = DateFormat(
+        "dd-MM-yyyy 'at' hh:mm a",
+      ).format(dateTime);
       return formattedDate;
+    }
+  } catch (e) {
+    debugPrint("Error formatting message time : $e");
+    return "";
+  }
+}
+
+String getFormattedMessageTimeHistory({required int timestamp}) {
+  try {
+    if (timestamp <= 0) {
+      return "";
+    }
+    var now = DateTime.now();
+    var dateTime = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
+    if (now.difference(dateTime).inHours < 24 && dateTime.day == now.day) {
+      return DateFormat("hh:mm a").format(dateTime);
+    } else if (now.difference(dateTime).inDays < 7) {
+      return DateFormat("EEE hh:mm a").format(dateTime);
+    } else {
+      return DateFormat("dd-MM-yy").format(dateTime);
     }
   } catch (e) {
     debugPrint("Error formatting message time : $e");

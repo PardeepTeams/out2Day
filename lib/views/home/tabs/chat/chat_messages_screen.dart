@@ -14,7 +14,7 @@ class ChatMessagesScreen extends StatelessWidget {
   ChatMessagesScreen({super.key});
 
   final ChatMessagesController controller = Get.put(ChatMessagesController());
- // final FirebaseStatusController statusController = Get.put(FirebaseStatusController());
+  final FirebaseStatusController statusController = Get.put(FirebaseStatusController());
 
   @override
   Widget build(BuildContext context) {
@@ -37,11 +37,14 @@ class ChatMessagesScreen extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundImage: NetworkImage(controller.userImage),
+                backgroundImage:  (controller.receiver.value?.additionalImagesThumb!.first ?? "").isNotEmpty
+                    ? NetworkImage(
+                    controller.receiver.value?.additionalImagesThumb!.first ?? "")
+                    : const AssetImage("assets/app_icon/app_logo.png"),
               ),
               const SizedBox(width: 10),
               semiboldText(
-                controller.userName,
+                controller.receiver.value!.firstName??"",
               ),
             ],
           ) ,
@@ -102,10 +105,9 @@ class ChatMessagesScreen extends StatelessWidget {
               reverse: true,
               controller: controller.scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              itemCount: controller.messages.length,
+              itemCount: controller.messagesList.length,
               itemBuilder: (_, index) {
-                final msg = controller.messages[index];
-
+                final msg = controller.messagesList[index];
                 return Column(
                   children: [
                   //  if (index == 0) _dateDivider("Today"),
@@ -151,8 +153,8 @@ class ChatMessagesScreen extends StatelessWidget {
   }
 
   /// CHAT BUBBLE
-  Widget _chatBubble(ChatMessage msg) {
-    bool isMe = msg.isMe;
+  Widget _chatBubble(MessagesModel msg) {
+    bool isMe = msg.sender == controller.sender.value?.id;
     return Align(
       alignment:isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Column(
@@ -175,8 +177,8 @@ class ChatMessagesScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 0),
             child: lightText(
-              msg.time
-            //  getFormattedMessageTime(timestamp: msg.timestamp ?? 0),
+            //  msg.time
+              getFormattedMessageTime(timestamp: msg.timestamp ?? 0),
             ),
           ),
         ],

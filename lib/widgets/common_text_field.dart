@@ -11,6 +11,7 @@ class CommonTextField extends StatelessWidget {
   final VoidCallback? onTap; // 👈 Naya onTap callback
   final int? maxLines;
   final TextCapitalization textCapitalization;
+  final TextInputAction? textInputAction;
 
   const CommonTextField({
     super.key,
@@ -22,7 +23,8 @@ class CommonTextField extends StatelessWidget {
     this.readOnly = false, // Default keyboard khulega
     this.onTap,
     this.maxLines =1,// 👈 Initialized here
-    this.textCapitalization = TextCapitalization.none
+    this.textCapitalization = TextCapitalization.none,
+    this.textInputAction,
   });
 
   @override
@@ -33,6 +35,7 @@ class CommonTextField extends StatelessWidget {
       maxLength: maxLength,
       maxLines: maxLines,
       textCapitalization: textCapitalization,
+      textInputAction: textInputAction ?? (maxLines! > 1 ? TextInputAction.newline : TextInputAction.done),
       readOnly: readOnly, // Agar true hai toh sirf onTap chalega
       onTap: onTap, // 👈 TextField ke onTap se connect kiya
       style: const TextStyle(

@@ -6,6 +6,8 @@ import '../../models/business_model.dart';
 import '../../utils/colors.dart';
 import '../../utils/common_styles.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart'; // 👈 Import add karein
+
 
 class BusinessDetailsScreen extends StatefulWidget {
   final BusinessModel business;
@@ -29,8 +31,6 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-            /// 🔥 IMAGE SLIDER
             Stack(
               children: [
                 SizedBox(
@@ -40,10 +40,27 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
                     itemCount: widget.business.businessImages!.length,
                     onPageChanged: (i) => setState(() => currentIndex = i),
                     itemBuilder: (_, index) {
-                      return Image.network(
-                        widget.business.businessImages![index],
+                      return CachedNetworkImage(
+                        imageUrl: widget.business.businessImages![index], // Main Original Image
                         width: double.infinity,
                         fit: BoxFit.cover,
+
+                        // 🟢 Thumbnail dikhane ke liye (Placeholder)
+                        placeholder: (context, url) => Image.network(
+                          widget.business.businessImagesThumb![index], // Backend se aaya hua Thumbnail URL
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          // Agar thumbnail bhi load ho raha ho tab tak ke liye:
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            color: Colors.grey[200],
+                          ),
+                        ),
+
+                        // 🔴 Agar original image load na ho paye
+                        errorWidget: (context, url, error) => Container(
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.broken_image, size: 40, color: Colors.grey),
+                        ),
                       );
                     },
                   ),

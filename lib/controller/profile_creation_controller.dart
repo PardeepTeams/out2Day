@@ -33,11 +33,12 @@ class ProfileCreationController extends GetxController {
  // var heightController = TextEditingController();
   var ethnicityController = TextEditingController();
 
-  Rx<File?> profileImage = Rx<File?>(null);
+ // Rx<File?> profileImage = Rx<File?>(null);
 
   RxList<File> additionalImages = <File>[].obs; // Mobile ke liye
   RxList<Uint8List> additionalWebImages = <Uint8List>[].obs; // Web ke liye
   RxList<String> networkImages = <String>[].obs; // Edit mode mein purani images ke liye
+  RxList<String> networkThumbImages = <String>[].obs; // Edit mode mein purani images ke liye
   final int maxImages = 5;
 
   RxInt genderIndex = 0.obs;
@@ -80,7 +81,7 @@ class ProfileCreationController extends GetxController {
   TextEditingController otherEthnicityController = TextEditingController();
 
   final ScrollController pageScrollController = ScrollController();
-  Rx<Uint8List?> webImage = Rx<Uint8List?>(null);
+  //Rx<Uint8List?> webImage = Rx<Uint8List?>(null);
 
   RxList<Hobby> hobbyList = <Hobby>[].obs; // Hobbies layi vi same Profession model use kar sakde ho
   var isHobbyLoading = false.obs;
@@ -88,9 +89,11 @@ class ProfileCreationController extends GetxController {
   RxBool isOtherHobbySelected = false.obs;
   TextEditingController otherHobbyController = TextEditingController();
 
-  RxString profileImageUrl = "".obs;
+  //RxString profileImageUrl = "".obs;
 
   RxList<String> removedImagesList = <String>[].obs;
+
+  String? deviceToken;
 
   void scrollToTop() {
     if (pageScrollController.hasClients) {
@@ -107,7 +110,7 @@ class ProfileCreationController extends GetxController {
 
   void nextStep() {
     if(currentStep == 0){
-      if(profileImage.value == null && webImage.value == null && profileImageUrl.isEmpty){
+      if(additionalImages.isEmpty && additionalWebImages.isEmpty && networkImages.isEmpty){
         showCommonSnackbar(title: AppStrings.photoReqTitle, message: AppStrings.photoReqMsg);
         return;
       }
@@ -175,9 +178,13 @@ class ProfileCreationController extends GetxController {
     final XFile? image = await picker.pickImage(source: source, imageQuality: 40);
     if (image != null) {
       if (kIsWeb) {
-        webImage.value = await image.readAsBytes();
+        additionalWebImages.clear();
+        additionalWebImages.add(await image.readAsBytes());
+      //  webImage.value = await image.readAsBytes();
       } else {
-        profileImage.value = File(image.path);
+        additionalImages.clear();
+        additionalImages.add(File(image.path));
+       // profileImage.value = File(image.path);
       }
     }
   }
@@ -192,6 +199,7 @@ class ProfileCreationController extends GetxController {
         if (isNetwork) {
           // Purani network image hatao aur nayi local list mein add karo
           networkImages.removeAt(index);
+          networkThumbImages.removeAt(index);
           if (kIsWeb) {
             additionalWebImages.add(await pickedFile.readAsBytes());
           } else {
@@ -253,6 +261,7 @@ class ProfileCreationController extends GetxController {
     if (isNetwork) {
       removedImagesList.add(networkImages[index]);
       networkImages.removeAt(index);
+      networkThumbImages.removeAt(index);
     } else if (kIsWeb) {
       additionalWebImages.removeAt(index);
     } else {
@@ -270,6 +279,7 @@ class ProfileCreationController extends GetxController {
       } else if (Get.arguments is Map) {
         phone = Get.arguments['phone'] ?? "";
         countryCode = Get.arguments['countryCode'] ?? "";
+        deviceToken = Get.arguments['deviceToken'] ?? "";
         getCurrentLocation();
       }
 
@@ -304,9 +314,9 @@ class ProfileCreationController extends GetxController {
     if (user.dob != null && user.dob!.isNotEmpty) {
       dobController.text = formatAge(user.dob!);
     }
-    if (user.profile != null && user.profile!.isNotEmpty) {
+   /* if (user.profile != null && user.profile!.isNotEmpty) {
       profileImageUrl.value =  user.profile!;
-    }
+    }*/
 
     /// 📍 Location
     locationController.text = user.address ?? "";
@@ -398,6 +408,9 @@ class ProfileCreationController extends GetxController {
 
     if(user.additionalImages!=null){
       networkImages.assignAll(user.additionalImages!);
+    }
+    if(user.additionalImagesThumb!=null){
+      networkThumbImages.assignAll(user.additionalImagesThumb!);
     }
   }
 
@@ -687,7 +700,7 @@ class ProfileCreationController extends GetxController {
   }
 
   void submitProfile(BuildContext context) async {
-    if (profileImage.value ==null && profileImageUrl.isEmpty && webImage.value == null) {
+    if (additionalImages.isEmpty && additionalWebImages.isEmpty && networkImages.isEmpty) {
       showCommonSnackbar(title: AppStrings.photoReqTitle, message: AppStrings.photoReqMsg);
       return;
     }
@@ -827,6 +840,8 @@ class ProfileCreationController extends GetxController {
         "is_business": isBusinessProfile.value ? "1" : "0",
         "drinking": selectedDrinking.value,
         "smoking": selectedSmoking.value,
+        if(!isEdit)
+        "device_token":deviceToken??""
       };
 
       print("UpdateprofileBody $body");
@@ -835,13 +850,15 @@ class ProfileCreationController extends GetxController {
       bool success = isEdit
           ? await ApiService().updateProfileApi(
         body: body,
-        profileImage: profileImage.value,
-          webImageBytes:webImage.value, images: kIsWeb?additionalWebImages:additionalImages,
+      //  profileImage: profileImage.value,
+        //  webImageBytes:webImage.value,
+          images: kIsWeb?additionalWebImages:additionalImages,
           removedImages: removedImagesList// null bhi ja sakta hai
       ) : await ApiService().createProfileApi(
         body: body,
-        profileImage: profileImage.value,
-          webImageBytes:webImage.value
+          images : kIsWeb?additionalWebImages:additionalImages
+      //  profileImage: profileImage.value,
+        //  webImageBytes:webImage.value
 
       );
       if (success) {

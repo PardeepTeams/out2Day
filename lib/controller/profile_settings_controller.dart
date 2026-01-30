@@ -66,8 +66,8 @@ class ProfileSettingsController extends GetxController {
     }
 
     /// 🖼 Profile Image (API URL)
-    if (user.profile != null && user.profile!.isNotEmpty) {
-      profileImageUrl.value = user.profile!;
+    if (user.additionalImagesThumb != null && user.additionalImagesThumb!.isNotEmpty) {
+      profileImageUrl.value = user.additionalImagesThumb![0];
     }
   }
 

@@ -191,7 +191,7 @@ class AppStrings {
   static const String businessLocation = "Activity Location";
   static const String businessDescription = "Activity Description";
   static const String businessImages = "Activity Images";
-  static const String businessURL = "Activity Webdite Link";
+  static const String businessURL = "Activity Website Link";
   static const String activityStartTime = "Activity Start Time";
   static const String activityEndTime = "Activity End Time";
   static const String activityPrice = "Activity Price";

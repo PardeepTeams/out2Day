@@ -168,6 +168,7 @@ class LoginController extends GetxController {
 */
 import 'package:Out2Do/utils/app_strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:fl_country_code_picker/fl_country_code_picker.dart';
@@ -187,9 +188,16 @@ class LoginController extends GetxController {
   RxBool isLoading = false.obs;
   String verificationId = "";
   ConfirmationResult? confirmationResult;
+  String? deviceToken;
 
   void setCountryCode(String code) {
     countryCode.value = code;
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    getToken();
   }
 
   /// 🔥 MAIN LOGIN FUNCTION
@@ -232,6 +240,7 @@ class LoginController extends GetxController {
             'phone': phoneController.text.trim(),
             'countryCode': countryCode.value,
             'isWeb': true,
+            "deviceToken":deviceToken,
             'confirmationResult': result,
           });
         } catch (e) {
@@ -267,6 +276,7 @@ class LoginController extends GetxController {
               'countryCode': countryCode.value,
               'verificationId': verificationId,
               'isWeb': false,
+              "deviceToken":deviceToken,
               'confirmationResult': null, // Web placeholder
             });
           },
@@ -280,6 +290,15 @@ class LoginController extends GetxController {
       print("Login Error: $e");
       showCommonSnackbar(title: "Error", message: e.toString());
     }
+  }
+
+  void getToken()async {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+    String? token = await messaging.getToken(
+        vapidKey: "BERopO2oEVrT8bDna0UeU3UaGNgAlSUH6Gfc2TVUZQZ5J8iNPwuXFY2nzXbXxixc-vmhhYQeZga44Pgciv7jN14"
+    );
+    deviceToken = token;
+    print("token  $token");
   }
 
   @override

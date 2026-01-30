@@ -117,8 +117,21 @@ class AllBusinessesScreen extends StatelessWidget {
                 height: double.infinity,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                placeholder: (_, __) => Container(
+                placeholder: (context, url) => Image.network(
+                  business.businessImagesThumb!.first, // Agar thumbnail key alag hai toh wo use karein
+                  height: double.infinity,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  // Agar thumbnail bhi load ho raha ho toh halka grey color dikhe
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: MyColors.greyLight,
+                  ),
+                ),
+
+                // 🔴 Error case jab main image load na ho paye
+                errorWidget: (context, url, error) => Container(
                   color: MyColors.greyLight,
+                  child: const Icon(Icons.broken_image, color: Colors.grey),
                 ),
               ),
 

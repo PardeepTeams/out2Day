@@ -102,7 +102,7 @@ class ProfileDetailController extends GetxController {
 
   void connectUser() {
 
-    Get.dialog(
+   /* Get.dialog(
       MatchDialog(profile:  UserData(
           id: 1,
           firstName: "Rohit",
@@ -110,13 +110,13 @@ class ProfileDetailController extends GetxController {
           profile: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1974&auto=format&fit=crop",
           aboutMe: "Love traveling and music.",
           profession: "Software Engineer",
-          distnace: 3.42, // Double value
+          distnace: "3.42", // Double value
           hobbies: "Music, Travel",
           city: "New Delhi",
           dob: "1997-12-12"
       ),),
       barrierDismissible: false,
-    );
+    );*/
 
     //  isConnected.value = true;
   //  showCommonSnackbar(title: "Connected", message: "You are now connected 🎉");

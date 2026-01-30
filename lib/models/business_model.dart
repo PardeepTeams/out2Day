@@ -28,6 +28,7 @@ class BusinessModel {
   String? webLink;
   String? address;
   List<String>? businessImages;
+  List<String>? businessImagesThumb;
   String? city;
   String? country;
   String? latitude;
@@ -58,6 +59,7 @@ class BusinessModel {
     this.userDetail,
     this.startTime,
     this.endTime,
+    this.businessImagesThumb,
   });
 
   BusinessModel.fromJson(Map<String, dynamic> json) {
@@ -69,6 +71,7 @@ class BusinessModel {
     webLink = json['web_link'];
     address = json['address'];
     businessImages = json['business_images']?.cast<String>();
+    businessImagesThumb = json['business_images_thumb']?.cast<String>();
     city = json['city'];
     country = json['country'];
     latitude = json['latitude'];

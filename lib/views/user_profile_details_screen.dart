@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import '../routes/app_routes.dart';
 import '../utils/app_strings.dart';
 import '../utils/colors.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class UserProfileDetailScreen extends StatefulWidget {
   const UserProfileDetailScreen({super.key});
@@ -57,7 +58,25 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
                             });
                           },
                           itemBuilder: (_, index) {
-                            return Image.network(
+                            return CachedNetworkImage(
+                              imageUrl: controller.additionalImages[index], // Original High-Res Image
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+
+                              // 🟢 Thumbnail placeholder: Jab tak original load ho rahi hai, ye dikhega
+                              placeholder: (context, url) => Image.network(
+                                controller.additionalThumbImages[index], // Backend se aaya hua Thumbnail URL
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
+
+                              // 🔴 Error handling: Agar original image na mile
+                              errorWidget: (context, url, error) => Container(
+                                color: Colors.grey[300],
+                                child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                              ),
+                            );
+                              /*Image.network(
                               controller.additionalImages[index],
                               width: double.infinity,
                               fit: BoxFit.cover,
@@ -65,7 +84,7 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
                                 color: Colors.grey[300],
                                 child: const Icon(Icons.broken_image, size: 50),
                               ),
-                            );
+                            )*/;
                           },
                         ),
                       );
@@ -112,7 +131,7 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
                       top: 40,
                       left: 16,
                       child: _circleIcon(Icons.arrow_back, () {
-                        Get.back();
+                        Get.back(result: true);
                       }),
                     ),
 
@@ -349,14 +368,14 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
           value: 'connect',
           child: _buildMenuItem(Icons.person_add, "Connect", MyColors.black),
         ),
-        PopupMenuItem(
+      /*  PopupMenuItem(
           value: 'block',
           child: _buildMenuItem(Icons.block, "Block User", MyColors.black),
         ),
         PopupMenuItem(
           value: 'report',
           child: _buildMenuItem(Icons.report_problem, "Report User", MyColors.black),
-        ),
+        ),*/
       ],
     ).then((value) {
       if (value == 'connect') {

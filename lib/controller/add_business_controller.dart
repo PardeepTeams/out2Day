@@ -142,16 +142,20 @@ class AddBusinessController extends GetxController {
         categoryCtrl.text.isEmpty ||
         descriptionCtrl.text.isEmpty ||
         locationCtrl.text.isEmpty||
-        webUrlCtrl.text.isEmpty ||
+    //    webUrlCtrl.text.isEmpty ||
         startTimeCtrl.text.isEmpty ||
-        endTimeCtrl.text.isEmpty
+        endTimeCtrl.text.isEmpty ||
+        priceCtrl.text.isEmpty
     ) {
       Get.snackbar("Error", "Please fill all fields");
       return;
     }
-    if(!isValidUrl(webUrlCtrl.text.trim())){
-      Get.snackbar("Error", "Please fill the valid link");
+    if(webUrlCtrl.text.isNotEmpty){
+      if(!isValidUrl(webUrlCtrl.text.trim())){
+        Get.snackbar("Error", "Please fill the valid link");
+      }
     }
+
     if(selectedImages.isEmpty && webImages.isEmpty){
       Get.snackbar("Error", "Please add at least one image");
       return;

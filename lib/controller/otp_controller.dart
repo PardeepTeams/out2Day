@@ -209,6 +209,7 @@ class OtpController extends GetxController {
   ConfirmationResult? confirmationResult;
 
   Timer? _timer;
+  String? deviceToken;
 
   @override
   void onInit() {
@@ -224,6 +225,7 @@ class OtpController extends GetxController {
       } else {
         // Mobile ke liye verificationId
         verificationId = Get.arguments['verificationId'] ?? "";
+        deviceToken = Get.arguments['deviceToken'] ?? "";
       }
     }
     textControllers = List.generate(6, (index) => TextEditingController());
@@ -276,7 +278,8 @@ class OtpController extends GetxController {
       if (userCredential.user != null) {
         int status = await ApiService().loginApi(
             countryCode: countryCode,
-            phone: phone
+            phone: phone,
+          deviceToken: deviceToken??""
         );
 
         MyProgressBar.hideLoadingDialog(context: context);
@@ -288,6 +291,7 @@ class OtpController extends GetxController {
           Get.offNamed(AppRoutes.profileCreation, arguments: {
             'phone': phone,
             'countryCode': countryCode,
+            'deviceToken': deviceToken,
           });
         }
       }

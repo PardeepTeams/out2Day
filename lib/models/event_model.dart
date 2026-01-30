@@ -27,6 +27,7 @@ class EventModel {
   String? eventDate;
   String? eventTime;
   List<String>? eventImages;
+  List<String>? eventImagesThumb;
   String? address;
   String? city;
   String? country;
@@ -50,6 +51,7 @@ class EventModel {
     this.longitude,
     this.status,
     this.userDetail,
+    this.eventImagesThumb,
   });
 
   EventModel.fromJson(Map<String, dynamic> json) {
@@ -60,7 +62,20 @@ class EventModel {
     eventDate = json['event_date'];
     eventTime = json['event_time'];
     // event_images array nu handle karna
-    eventImages = json['event_images']?.cast<String>();
+ //   eventImages = json['event_images']??[];
+//    eventImagesThumb = json['business_images_thumb']??[];
+
+    if (json['event_images'] != null) {
+      eventImages = List<String>.from(json['event_images']);
+    } else {
+      eventImages = [];
+    }
+
+    if (json['event_images_thumb'] != null) {
+      eventImagesThumb = List<String>.from(json['event_images_thumb']);
+    } else {
+      eventImagesThumb = [];
+    }
     address = json['address'];
     city = json['city'];
     country = json['country'];

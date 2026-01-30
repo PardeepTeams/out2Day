@@ -1,17 +1,22 @@
 import 'package:Out2Do/api/api_service.dart';
 import 'package:Out2Do/api/storage_helper.dart';
 import 'package:Out2Do/models/user_model.dart';
+import 'package:Out2Do/utils/common_styles.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 
+import '../models/chat_responseModel.dart';
 import '../models/chat_user.dart';
 import '../routes/app_routes.dart';
 
 class ChatController extends GetxController {
-  final RxList<ChatUser> chats = <ChatUser>[].obs;
+//  final RxList<ChatUser> chats = <ChatUser>[].obs;
 
   var isLoading = true.obs;
- // var matchesList = <UserData>[].obs;
-  final recentMatches = [
+  var matchesList = <UserData>[].obs;
+  var chats = <Chat>[].obs;
+  Rxn<UserData> userDetails = Rxn<UserData>();
+/*  final recentMatches = [
     {
       "image": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1974&auto=format&fit=crop",
       "online": true,
@@ -36,42 +41,36 @@ class ChatController extends GetxController {
       "image": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1974&auto=format&fit=crop",
       "online": true,
     },
-  ];
+  ];*/
 
   /// Called when controller is created
   @override
   void onInit() {
     super.onInit();
+    userDetails.value = StorageProvider.getUserData();
     getAllData();
   }
 
   void getAllData(){
-   // getMyMatches();
     loadChats();
   }
 
-/*  void getMyMatches() async {
+ /* void getMyMatches() async {
     try {
       isLoading(true);
       var response = await ApiService().fetchMyMatches();
       matchesList.assignAll(response.data!); // Data save karo
     } catch (e) {
-      Get.snackbar("Error", e.toString());
+      showCommonSnackbar(title: "Error", message: e.toString());
     } finally {
       isLoading(false);
     }
   }*/
 
-  /// Called when UI is fully rendered
-  @override
-  void onReady() {
-    super.onReady();
-    // Future socket / firebase listener can be attached here
-  }
 
   /// Load mock / API chats
-  void loadChats() {
-    chats.assignAll([
+  void loadChats() async{
+  /*  chats.assignAll([
       ChatUser(
         name: "Aanya",
         image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1974&auto=format&fit=crop",
@@ -94,22 +93,49 @@ class ChatController extends GetxController {
         time: "12:05 PM",
         unreadCount: 0,
       ),
-    ]);
+    ]);*/
+
+    try {
+      isLoading.value = true;
+
+      // API hit
+      ChatResponseModel response = await ApiService().fetchFirebaseChats();
+      isLoading.value = false;
+      chats.assignAll(response.chats ?? []);
+      matchesList.assignAll(response.matches ?? []);
+
+    } catch (e) {
+      isLoading.value = false;
+      // Error handle aur display
+      print("Chat API Error: $e");
+
+      showCommonSnackbar(
+          title: "Error",
+          message: e.toString() ?? "Failed to remove event"
+      );
+
+    }
   }
 
   /// Clear unread count when chat opened
   void openChat(int index) {
     final chat = chats[index];
-    chats[index] = ChatUser(
+    /*chats[index] = ChatUser(
       name: chat.name,
       image: chat.image,
       lastMessage: chat.lastMessage,
       time: chat.time,
       unreadCount: 0,
       isOnline: chat.isOnline,
-    );
-
-    Get.toNamed(AppRoutes.chatMessages)?.then((value) {
+    );*/
+    UserData? receiver =
+    chat.receiver != userDetails.value?.id
+        ? (chat.receiverDetail ?? UserData())
+        : (chat.senderDetail ?? UserData());
+    Get.toNamed(AppRoutes.chatMessages, arguments: <String, dynamic>{
+      'sender': StorageProvider.getUserData()!.toJson(),
+      'receiver':receiver.toJson(),
+    })?.then((value) {
        loadChats();
       if (value == true) {
         print("Data updated, refreshing UI...");

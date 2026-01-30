@@ -1,9 +1,12 @@
+import 'package:Out2Do/controller/swipe_controller.dart';
 import 'package:get/get.dart';
 
 import '../api/api_service.dart';
+import '../api/storage_helper.dart';
 import '../models/user_model.dart';
 import '../routes/app_routes.dart';
 import '../utils/common_styles.dart';
+import '../utils/my_progress_bar.dart';
 import '../views/home/tabs/connect/widgets/match_dialog.dart';
 
 
@@ -44,6 +47,7 @@ class UserProfileDetailController extends GetxController {
   RxBool isMyProfile = false.obs;
   int? profileUserId;
   RxList<String> additionalImages = <String>[].obs;
+  RxList<String> additionalThumbImages = <String>[].obs;
 
 
   @override
@@ -81,9 +85,13 @@ class UserProfileDetailController extends GetxController {
         hobbies.value =   userDetails.value.hobbies!.split(',').map((e) => e.trim()).toList();
       }
       additionalImages.clear();
-      additionalImages.add(image.value);
+    //  additionalImages.add(image.value);
       if (userDetails.value.additionalImages != null) {
         additionalImages.addAll(userDetails.value.additionalImages!);
+      }
+      if (userDetails.value.additionalImagesThumb != null) {
+        print("additionalThumbImages  $additionalThumbImages");
+        additionalThumbImages.addAll(userDetails.value.additionalImagesThumb!);
       }
     } catch (e) {
       showCommonSnackbar(title: "Error", message: e.toString());
@@ -92,9 +100,54 @@ class UserProfileDetailController extends GetxController {
     }
   }
 
+
+  Future<void> markInterestedAndHandleMatch(UserData user) async {
+    try {
+      MyProgressBar.showLoadingDialog(context: Get.context!);
+
+      final response = await ApiService().markUserInterested(
+        interestedId: user.id.toString(),
+      );
+      MyProgressBar.hideLoadingDialog(context: Get.context!);
+      if (response['status'] == 1) {
+        if (response['match'] == true) {
+          Get.dialog(
+            MatchDialog(profile: user,
+                onKeepSwiping: () async {
+                  Get.back();
+                  await Future.delayed(const Duration(milliseconds: 100));
+                  Get.back(result: true);
+                }, onSendMessage: () async {
+              Get.back();
+              await Future.delayed(const Duration(milliseconds: 100));
+                await Get.offNamed(
+                  AppRoutes.chatMessages,
+                    arguments: <String, dynamic>{
+                      'sender': StorageProvider.getUserData()!.toJson(),
+                      'receiver': user.toJson(),
+                    }
+                );
+                if (Get.isRegistered<SwipeController>()) {
+                  Get.find<SwipeController>().fetchProfiles();
+                }
+              },),
+            barrierDismissible: false,
+          );
+        }
+     //   Get.back(result: true);
+      }else{
+        print("MatchError $response}");
+      }
+
+    } catch (e) {
+      MyProgressBar.hideLoadingDialog(context: Get.context!);
+      print("MatchResponse  $e");
+    }
+  }
   void connectUser() {
 
-    Get.dialog(
+    markInterestedAndHandleMatch(userDetails.value);
+    /*Get.dialog(
       MatchDialog(profile:  UserData(
           id: 1,
           firstName: "Rohit",
@@ -108,7 +161,7 @@ class UserProfileDetailController extends GetxController {
           dob: "1997-12-12"
       ),),
       barrierDismissible: false,
-    );
+    );*/
 
     //  isConnected.value = true;
     //  showCommonSnackbar(title: "Connected", message: "You are now connected 🎉");
