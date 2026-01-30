@@ -153,7 +153,8 @@ class _AddBusinessScreenState extends State<AddBusinessScreen> {
             regularText(AppStrings.businessDescription),
             commonTextFieldSmallGap(),
             CommonTextField(controller: controller.descriptionCtrl,
-                textCapitalization : TextCapitalization.sentences,
+                keyboardType: TextInputType.multiline, // 👈 Ye iOS Web ke liye mandatory hai
+                textInputAction: TextInputAction.newline,
                 hintText: AppStrings.businessDescription, maxLines: 4),
             commonTextFieldLargeGap(),
 

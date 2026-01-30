@@ -132,7 +132,7 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min, // 🔥 ONLY DOTS WIDTH
                         children: List.generate(
-                          widget.business.businessImages!.length,
+                          widget.business.businessImagesThumb!.length,
                               (i) => Container(
                             margin: const EdgeInsets.symmetric(horizontal: 3),
                             width: currentIndex == i ? 10 : 6,
@@ -223,10 +223,10 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
                       ],
                     ),
 
-                    const SizedBox(height: 10),
+                    widget.business.webLink!=null && widget.business.webLink!.isNotEmpty?  const SizedBox(height: 10):SizedBox(),
 
                     /// WEBSITE
-                    if (widget.business.webLink!.isNotEmpty)
+                    if (widget.business.webLink!=null && widget.business.webLink!.isNotEmpty)
                       InkWell(
                         onTap: () async {
                             final uri = Uri.parse(widget.business.webLink!);

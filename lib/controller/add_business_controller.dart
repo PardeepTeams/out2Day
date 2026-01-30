@@ -232,7 +232,7 @@ class AddBusinessController extends GetxController {
         categoryCtrl.text.isEmpty ||
         descriptionCtrl.text.isEmpty ||
         locationCtrl.text.isEmpty||
-        webUrlCtrl.text.isEmpty ||
+     //   webUrlCtrl.text.isEmpty ||
         startTimeCtrl.text.isEmpty ||
         endTimeCtrl.text.isEmpty
     ) {
@@ -240,8 +240,10 @@ class AddBusinessController extends GetxController {
       return;
     }
 
-    if(!isValidUrl(webUrlCtrl.text.trim())){
-      Get.snackbar("Error", "Please fill the valid link");
+    if(webUrlCtrl.text.isNotEmpty){
+      if(!isValidUrl(webUrlCtrl.text.trim())){
+        Get.snackbar("Error", "Please fill the valid link");
+      }
     }
     if(selectedImages.isEmpty && webImages.isEmpty && networkImages.isEmpty){
       Get.snackbar("Error", "Please add at least one image");

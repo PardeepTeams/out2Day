@@ -120,7 +120,8 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
             commonTextFieldSmallGap(),
             CommonTextField(
               controller: controller.descCtrl,
-              textCapitalization: TextCapitalization.sentences,
+              keyboardType: TextInputType.multiline, // 👈 Ye iOS Web ke liye mandatory hai
+              textInputAction: TextInputAction.newline,
               hintText: AppStrings.eventDescLabel,
               maxLines: 4,
             ),

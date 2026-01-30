@@ -37,11 +37,11 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   height: 360,
                   width: double.infinity,
                   child:PageView.builder(
-                    itemCount: event.eventImages!.length,
+                    itemCount: event.eventImagesThumb!.length,
                     onPageChanged: (i) => setState(() => currentIndex = i),
                     itemBuilder: (_, index) {
                       return Image.network(
-                        event.eventImages![index],
+                        event.eventImagesThumb![index],
                         width: double.infinity,
                         fit: BoxFit.cover,
                       );
@@ -87,7 +87,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                          CircleAvatar(
                           radius: 22,
                           backgroundImage: NetworkImage(
-                            event.userDetail!.profile!
+                            event.userDetail!.additionalImagesThumb!.first!
                          //   "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
                           ),
                         ),
@@ -120,7 +120,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min, // 🔥 ONLY DOTS WIDTH
                         children: List.generate(
-                          event.eventImages!.length,
+                          event.eventImagesThumb!.length,
                               (i) => Container(
                             margin: const EdgeInsets.symmetric(horizontal: 3),
                             width: currentIndex == i ? 10 : 6,

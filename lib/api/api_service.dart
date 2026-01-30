@@ -734,6 +734,8 @@ class ApiService {
       var response = await http.Response.fromStream(streamedResponse);
 
       var responseData = json.decode(response.body);
+
+      print("AddActivity $responseData");
       // 🔥 Model vich convert karo
       AddBusinessResponse businessRes = AddBusinessResponse.fromJson(responseData);
 
@@ -764,9 +766,6 @@ class ApiService {
       Get.offAllNamed(AppRoutes.login);
     }
   }
-
-
-
 
   Future<bool> updateBusiness({
     required Map<String, String> body,
