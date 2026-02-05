@@ -317,9 +317,9 @@ class OtpController extends GetxController {
   }
 
   void resendOtp(BuildContext context) async {
-/*    otp.fillRange(0, 6, "");
+    otp.fillRange(0, 6, "");
     textControllers.forEach((t) => t.clear());
-    startTimer();*/
+
 
     MyProgressBar.showLoadingDialog(context: context);
     if(kIsWeb){
@@ -330,9 +330,6 @@ class OtpController extends GetxController {
           size: RecaptchaVerifierSize.compact,
           theme: RecaptchaVerifierTheme.light,
         );
-
-
-
         try {
           await verifier.render();
 
@@ -344,6 +341,8 @@ class OtpController extends GetxController {
 
           confirmationResult = result;
           MyProgressBar.hideLoadingDialog(context: context);
+          startTimer();
+          showCommonSnackbar(title: AppStrings.otpText, message: AppStrings.otpResent,);
 
         } catch (e) {
           verifier.clear(); // Error aane par bhi clear karein
@@ -367,12 +366,14 @@ class OtpController extends GetxController {
           MyProgressBar.hideLoadingDialog(context: context);
           verificationId = verId;
           isLoading.value = false;
+          startTimer();
           showCommonSnackbar(title: AppStrings.otpText, message: AppStrings.otpResent,);
         },
         codeAutoRetrievalTimeout: (verId) {
           MyProgressBar.hideLoadingDialog(context: context);
           verificationId = verId;
           isLoading.value = false;
+          startTimer();
           showCommonSnackbar(title: AppStrings.otpText, message: AppStrings.otpResent,);
         },
       );

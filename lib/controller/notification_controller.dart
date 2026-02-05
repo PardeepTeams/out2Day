@@ -55,40 +55,11 @@ class NotificationController extends GetxController {
           isRead: true,
         );
     if(index == 0){
-      Get.to(() => EventDetailsScreen(event:  EventModel(
-          id: 1,
-          eventTitle: "Dating Night Party",
-          eventImages: [
-            "https://images.unsplash.com/photo-1528605248644-14dd04022da1",
-            "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
-            "https://images.unsplash.com/photo-1492684223066-81342ee5ff30",
-          ],
-          address: "California, USA",
-          eventDate: "2026-04-14",
-          description: "Meet singles near you",
-          status: 1,
-          eventTime: "18:00:00",
-          city: "Delhi",
-          country: "India"
-      ),myEvents: false,));
+
     }else if(index == 2){
-      Get.to(() => BusinessDetailsScreen(business:  BusinessModel(
-        id: 1,
-        businessName: "Adult Dance Classes",
-        category: "Cafe",
-        description: "Best coffee in town",
-        address: "California",
-        businessImages:  [
-          "https://images.unsplash.com/photo-1528605248644-14dd04022da1",
-          "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
-          "https://images.unsplash.com/photo-1492684223066-81342ee5ff30",
-        ],
-        status: 1,
-        webLink: 'https://cafemocha.com',
-      ),myBusiness: false,));
+
     }else{
-      Get.toNamed(AppRoutes.chatMessages)?.then((value) {
-      });
+
     }
 
   }

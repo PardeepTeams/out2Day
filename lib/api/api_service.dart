@@ -422,6 +422,7 @@ class ApiService {
         },
         body: {
           'profile_user_id': profileUserId.toString(),
+          "user_id":StorageProvider.getUserData()!.id.toString()
         },
       );
 
@@ -1284,6 +1285,60 @@ class ApiService {
 
       final responseData = json.decode(response.body);
 
+      print("Intreseted  $responseData");
+
+      if (response.statusCode == 200) {
+        if (responseData['status'] == 1) {
+          print("Response Status: ${response.statusCode}");
+          print("Response Body: ${response.body}");
+          return responseData;
+        } else {
+          _handleUnauthorized(responseData["message"]);
+          // API level error (e.g. Already interested)
+          throw responseData['message'] ?? "Something went wrong";
+        }
+      } else if (response.statusCode == 401) {
+        throw "Session expired. Please login again.";
+      } else if (response.statusCode == 500) {
+        throw "Server is under maintenance. Please try later.";
+      } else {
+        throw "Error: ${response.statusCode}. Please try again.";
+      }
+    } on SocketException {
+      throw "No Internet connection. Please check your network.";
+    } on TimeoutException {
+      throw "Connection timed out. Please try again.";
+    } catch (e) {
+      // Baaki kisi bhi tarah ki error ke liye
+      rethrow;
+    }
+  }
+
+
+
+
+  Future<Map<String, dynamic>> markUserNotInterested({
+    required String interestedId,
+  }) async {
+    try {
+      final String? token = StorageProvider.getToken();
+      final String? userId = StorageProvider.getUserData()!.id.toString();
+
+      final response = await http.post(
+        Uri.parse("$baseUrl/mark-not-interested"),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          'user_id': userId,
+          'not_interested_id': interestedId,
+        }),
+      ).timeout(const Duration(seconds: 15)); // Timeout add kiya
+
+      final responseData = json.decode(response.body);
+print("NotIntrestedResponse $responseData");
       if (response.statusCode == 200) {
         if (responseData['status'] == 1) {
           print("Response Status: ${response.statusCode}");
@@ -1331,7 +1386,7 @@ class ApiService {
       ).timeout(const Duration(seconds: 15)); // Timeout handle karne ke liye
 
       final Map<String, dynamic> responseData = jsonDecode(response.body);
-
+      
       switch (response.statusCode) {
         case 200:
           if (responseData['status'] == 1) {
@@ -1362,6 +1417,102 @@ class ApiService {
     }
   }
 
- //https://out2day.brickandwallsinc.com/api/mark-interested
+  Future<Map<String, dynamic>> updateNotificationStatus({
+    required int status, // 1 for ON, 0 for OFF
+  }) async {
+    // 1. Internet Connection Check
+    if (!await isConnected()) {
+      throw "Please check your internet connection.";
+    }
+
+    try {
+      final token = StorageProvider.getToken();
+      final userData = StorageProvider.getUserData();
+
+      if (token == null || userData == null) {
+        throw "Session expired. Please login again.";
+      }
+
+      // 2. API Call
+      final response = await http.post(
+        Uri.parse("$baseUrl/notification-status-update"),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'user_id': userData.id.toString(),
+          'status': status,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      var responseData = json.decode(response.body);
+      print("Notification Status Update Response: ${response.body}");
+
+      // 3. Response Handling
+      if (response.statusCode == 200) {
+        if (responseData['status'] == 1) {
+          // Success case
+          return responseData;
+        } else {
+          // Backend returned status 0
+          _handleUnauthorized(responseData["message"]);
+          throw responseData['message'] ?? "Failed to update notification status.";
+        }
+      } else if (response.statusCode == 401) {
+        // Unauthorized handle karein
+        _handleUnauthorized("unauthorized");
+        throw "Session expired. Please login again.";
+      } else {
+        // Other Server Errors
+        throw responseData['message'] ?? "Server Error: ${response.statusCode}";
+      }
+    } on TimeoutException {
+      throw "Connection timed out. Please try again.";
+    } catch (e) {
+      // Baki exceptions throw karein jo controller catch karega
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchUnreadChatCount({required String userId}) async {
+    if (!await isConnected()) {
+      throw "Please check your internet connection.";
+    }
+
+    try {
+      final token = StorageProvider.getToken();
+      if (token == null) {
+        throw "Session expired. Please login again.";
+      }
+
+      // GET request parameters ke saath
+      final response = await http.get(
+        Uri.parse("$baseUrl/get-chat-unread-count?user_id=$userId"),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      var responseData = json.decode(response.body);
+      print("Unread Count Response: ${response.body}");
+
+      if (response.statusCode == 200) {
+        if (responseData['status'] == 1) {
+          return responseData; // Isme 'unread_users' key milegi
+        } else {
+          _handleUnauthorized(responseData["message"]);
+          throw responseData['message'] ?? "Failed to fetch count";
+        }
+      } else {
+        throw responseData['message'] ?? "Server Error: ${response.statusCode}";
+      }
+    } catch (e) {
+      print("Unread API Error: $e");
+      rethrow;
+    }
+  }
 
 }

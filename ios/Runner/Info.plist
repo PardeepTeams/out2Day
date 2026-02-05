@@ -59,5 +59,10 @@
     <key>PermissionGroupNotification</key>
     <string>We need notification access to alert you about new matches and messages.</string>
 
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>remote-notification</string>
+    </array>
+
     </dict>
 </plist>

@@ -53,7 +53,6 @@ class ProfileSettingsController extends GetxController {
 
     if (user == null) return;
 
-    print("firstName ${user.firstName}");
     userId.value = user.id!;
 
     /// 🧑 Name
@@ -65,13 +64,40 @@ class ProfileSettingsController extends GetxController {
       userAge.value = calculateAge(user.dob!).toString();
     }
 
+    if(user.isNotification!=null){
+      notificationsEnabled.value = user.isNotification ==0?false:true;
+    }
+
     /// 🖼 Profile Image (API URL)
     if (user.additionalImagesThumb != null && user.additionalImagesThumb!.isNotEmpty) {
-      profileImageUrl.value = user.additionalImagesThumb![0];
+      profileImageUrl.value = user.additionalImagesThumb!.first;
     }
   }
 
 
+
+  void changeNotificationSetting(bool value) async {
+    try {
+      MyProgressBar.showLoadingDialog(context: Get.context!);
+
+      // API call (1 for true/on, 0 for false/off)
+      var result = await ApiService().updateNotificationStatus(status: value ? 1 : 0);
+
+      MyProgressBar.hideLoadingDialog(context: Get.context!);
+      notificationsEnabled.value = value;
+
+      UserData? user = StorageProvider.getUserData();
+      user!.isNotification = value?1:0;
+      StorageProvider.saveAuthData(token: StorageProvider.getToken()!, userData: user);
+      // Success message
+      showCommonSnackbar(title: "Success", message: result['message'] ?? "Status updated");
+
+    } catch (e) {
+      MyProgressBar.hideLoadingDialog(context: Get.context!);
+      showCommonSnackbar(title: "Error", message: e.toString());
+      notificationsEnabled.value = !value;
+    }
+  }
   void loadDynamicPagesFromLocal() {
     bool needsRefresh = StorageProvider.read("needs_static_data_refresh") ?? false;
     var cachedPages = StorageProvider.getDynamicPages(); // Ye method niche add karenge
@@ -131,7 +157,8 @@ class ProfileSettingsController extends GetxController {
 
   /// Toggle notifications
   void toggleNotifications(bool value) {
-    notificationsEnabled.value = value;
+    changeNotificationSetting(value);
+ //   notificationsEnabled.value = value;
   }
   /// Perform actions
   void blockUsers() => Get.toNamed(AppRoutes.blockedUser,

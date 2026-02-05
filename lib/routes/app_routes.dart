@@ -15,4 +15,5 @@ abstract class AppRoutes {
   static const privacyPolicy = '/privacyPolicy';
   static const safetyScreen = '/safetyScreen';
   static const ewProfileDetail = '/newUserProfile';
+  static const reportUser = '/reportUser';
 }

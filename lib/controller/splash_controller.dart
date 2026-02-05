@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../api/api_service.dart';
 import '../api/storage_helper.dart';
+import '../main.dart';
 
 /*class SplashController extends GetxController {
   @override
@@ -58,7 +59,18 @@ class SplashController extends GetxController {
   void _checkLogin() {
     bool isLoggedIn = StorageProvider.isUserLoggedIn();
     if (isLoggedIn) {
-      Get.offAllNamed(AppRoutes.home);
+    //  Get.offAllNamed(AppRoutes.home);
+      if (pendingNotificationPayload != null) {
+        // Step 1: Pehle Home pe jayein (Back stack ke liye)
+        Get.offAllNamed(AppRoutes.home);
+
+        // Step 2: Phir notification redirect karein
+        String payload = pendingNotificationPayload!;
+        pendingNotificationPayload = null; // Clear it
+        manageNotificationClick(payload);
+      } else {
+        Get.offAllNamed(AppRoutes.home);
+      }
     } else {
       Get.offAllNamed(AppRoutes.login);
     }

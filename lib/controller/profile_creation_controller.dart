@@ -248,8 +248,10 @@ class ProfileCreationController extends GetxController {
         if (kIsWeb) {
           final bytes = await pickedFile.readAsBytes();
           additionalWebImages.add(bytes); // List mein ek image add ho gayi
+          additionalWebImages.refresh();
         } else {
           additionalImages.add(File(pickedFile.path)); // List mein ek image add ho gayi
+          additionalImages.refresh();
         }
       }
     } catch (e) {
@@ -257,17 +259,57 @@ class ProfileCreationController extends GetxController {
     }
   }
 
-  void removeImage(int index, {bool isNetwork = false}) {
+  void removeImage(int index) {
+    // 1. Agar index Network Images ki range mein hai
+    if (index < networkImages.length) {
+      removedImagesList.add(networkImages[index]);
+      networkImages.removeAt(index);
+      if (networkThumbImages.length > index) {
+        networkThumbImages.removeAt(index);
+      }
+      networkImages.refresh();
+      networkThumbImages.refresh();
+      print("Network Image Removed at index: $index");
+    }
+    // 2. Agar index Local Images (Mobile/Web) ki range mein hai
+    else {
+      // Local index calculate karne ke liye total index mein se network length minus karni hogi
+      int localIndex = index - networkImages.length;
+
+      if (kIsWeb) {
+        if (localIndex < additionalWebImages.length) {
+          additionalWebImages.removeAt(localIndex);
+          additionalWebImages.refresh();
+          print("Web Image Removed at localIndex: $localIndex");
+        }
+      } else {
+        if (localIndex < additionalImages.length) {
+          additionalImages.removeAt(localIndex);
+          additionalImages.refresh();
+          print("Mobile Image Removed at localIndex: $localIndex");
+        }
+      }
+    }
+  }
+
+/*  void removeImage(int index, {bool isNetwork = false}) {
     if (isNetwork) {
       removedImagesList.add(networkImages[index]);
       networkImages.removeAt(index);
       networkThumbImages.removeAt(index);
+      networkImages.refresh();
+      networkThumbImages.refresh();
     } else if (kIsWeb) {
       additionalWebImages.removeAt(index);
+      additionalWebImages.refresh();
     } else {
       additionalImages.removeAt(index);
+      additionalImages.refresh();
+
+      print("isWeb  ${additionalImages.length}");
+
     }
-  }
+  }*/
 
   @override
   void onInit() {

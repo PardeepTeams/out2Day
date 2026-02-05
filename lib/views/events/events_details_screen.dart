@@ -86,10 +86,33 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                       children: [
                          CircleAvatar(
                           radius: 22,
-                          backgroundImage: NetworkImage(
+                           backgroundColor: Colors.grey.shade200,
+                          child: ClipOval(
+                              child: CachedNetworkImage(
+                                imageUrl: "${event.userDetail!.additionalImagesThumb!.first}", // Aapka variable
+                                fit: BoxFit.cover,
+                                width: 64,
+                                height: 64,
+
+                                // ✅ Cache settings: Agar image cache mein hai toh bina loader ke turant dikhegi
+                                placeholderFadeInDuration: Duration.zero,
+                                fadeInDuration: const Duration(milliseconds: 500), // Puranay 1500ms se kam kiya taaki lag na lage
+
+                                // ✅ Image cache management
+                                memCacheWidth: 200, // Memory optimization
+                                memCacheHeight: 200,
+
+                                errorWidget: (context, url, error) => const Icon(
+                                  Icons.person,
+                                  size: 30,
+                                  color: Colors.grey,
+                                ),
+                              )
+                          ),
+                        /*  backgroundImage: NetworkImage(
                             event.userDetail!.additionalImagesThumb!.first!
                          //   "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
-                          ),
+                          ),*/
                         ),
                         const SizedBox(width: 10),
                         Expanded(

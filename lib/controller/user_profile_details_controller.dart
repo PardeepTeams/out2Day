@@ -46,8 +46,10 @@ class UserProfileDetailController extends GetxController {
   RxBool isBlocked = false.obs;
   RxBool isMyProfile = false.obs;
   int? profileUserId;
+  RxBool fromChats = false.obs;
   RxList<String> additionalImages = <String>[].obs;
   RxList<String> additionalThumbImages = <String>[].obs;
+
 
 
   @override
@@ -55,6 +57,7 @@ class UserProfileDetailController extends GetxController {
     super.onInit();
     if (Get.arguments != null) {
       profileUserId = Get.arguments['id']; // Maan lo key 'id' hai
+      fromChats.value = Get.arguments['fromChat']; // Maan lo key 'id' hai
       isMyProfile.value = Get.arguments['isMy'];
         if (profileUserId != null) {
         loadUserProfile(profileUserId!);
@@ -63,6 +66,7 @@ class UserProfileDetailController extends GetxController {
       }
     }
   }
+
 
   void loadUserProfile(int id) async {
     try {
@@ -78,6 +82,10 @@ class UserProfileDetailController extends GetxController {
       drinking.value = userDetails.value.drinking??"";
       smoking.value = userDetails.value.smoking??"";
       image.value = userDetails.value.profile??"";
+      isConnected.value = userDetails.value.isMatch??false;
+      isBlocked.value = userDetails.value.isBlocked??false;
+
+      print("isConnected  ${userDetails.value.isMatch}");
 
 
       about.value = userDetails.value.aboutMe??"";
@@ -167,19 +175,54 @@ class UserProfileDetailController extends GetxController {
     //  showCommonSnackbar(title: "Connected", message: "You are now connected 🎉");
   }
 
-  void sendMessage() {
-    Get.toNamed(AppRoutes.chatMessages);
+  void sendMessage() async {
+    if(fromChats.value){
+      Get.back(result: {'action': isBlocked.value?"blocked":"unblock"});
+  }else{
+    //  await Future.delayed(const Duration(milliseconds: 100));
+      await Get.offNamed(
+          AppRoutes.chatMessages,
+          arguments: <String, dynamic>{
+            'sender': StorageProvider.getUserData()!.toJson(),
+            'receiver': userDetails.value.toJson(),
+          }
+      );
+      if (Get.isRegistered<SwipeController>()) {
+        Get.find<SwipeController>().fetchProfiles();
+      }
+    }
+
     // showCommonSnackbar(title:"Message",message: "Opening chat...");
   }
 
-  void blockUser() {
-    isBlocked.value = true;
-    showCommonSnackbar(title: "Blocked",message: "User has been blocked");
+  void blockUser() async {
+    try {
+      MyProgressBar.showLoadingDialog(context: Get.context!); // Loading start
+      bool success = await ApiService().blockUser(blockedUserId: profileUserId.toString());
+      MyProgressBar.hideLoadingDialog(context: Get.context!); // Loading stop
+
+      if (success) {
+        isBlocked.value = true;
+      }
+    } catch (e) {
+      MyProgressBar.hideLoadingDialog(context: Get.context!);
+      showCommonSnackbar(title: "Block Error", message: e.toString());
+    }
   }
 
-  void unblockUser() {
-    isBlocked.value = false;
-    showCommonSnackbar(title: "Unblocked",message:  "User has been unblocked");
+  void unblockUser() async {
+    try {
+      MyProgressBar.showLoadingDialog(context: Get.context!); // Loading start
+      bool success = await ApiService().unblockUser(blockedUserId: profileUserId.toString());
+      MyProgressBar.hideLoadingDialog(context: Get.context!); // Loading stop
+
+      if (success) {
+        isBlocked.value = false;
+      }
+    } catch (e) {
+      MyProgressBar.hideLoadingDialog(context: Get.context!);
+      showCommonSnackbar(title: "UnBlock Error", message: e.toString());
+    }
   }
 
   void reportUser() {

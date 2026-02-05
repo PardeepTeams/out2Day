@@ -12,6 +12,7 @@ import '../../../../controller/profile_settings_controller.dart';
 import '../../../../routes/app_routes.dart';
 import '../../../../utils/colors.dart';
 import '../../../../utils/common_styles.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 
 class ProfileTab extends StatelessWidget {
@@ -42,7 +43,7 @@ class ProfileTab extends StatelessWidget {
                   child: Row(
                     children: [
                       /// Profile Image
-                      CircleAvatar(
+                     /* CircleAvatar(
                         radius: 40,
                         backgroundColor: MyColors.greyLight,
                         backgroundImage:  controller.profileImageUrl.value.isNotEmpty
@@ -55,6 +56,33 @@ class ProfileTab extends StatelessWidget {
                           size: 40,
                         )
                             : null,
+                      ),*/
+
+                      CircleAvatar(
+                        radius: 35,
+                        backgroundColor: MyColors.greyLight,
+                        child: ClipOval(
+                            child: CachedNetworkImage(
+                              imageUrl: controller.profileImageUrl.value, // Aapka variable
+                              fit: BoxFit.cover,
+                              width: 70,
+                              height: 70,
+
+                              // ✅ Cache settings: Agar image cache mein hai toh bina loader ke turant dikhegi
+                              placeholderFadeInDuration: Duration.zero,
+                              fadeInDuration: const Duration(milliseconds: 500), // Puranay 1500ms se kam kiya taaki lag na lage
+
+                              // ✅ Image cache management
+                              memCacheWidth: 200, // Memory optimization
+                              memCacheHeight: 200,
+
+                              errorWidget: (context, url, error) => const Icon(
+                                Icons.person,
+                                size: 30,
+                                color: Colors.grey,
+                              ),
+                            )
+                        ),
                       ),
 
                       const SizedBox(width: 16),
@@ -80,7 +108,7 @@ class ProfileTab extends StatelessWidget {
                             arguments: true,
                           )?.then((result) {
                             if (result == true) {
-                              //  controller.loadUserFromStorage(); // 🔥 refresh
+                                controller.loadUserFromStorage(); // 🔥 refresh
                             }
                           });
                         },
@@ -130,8 +158,8 @@ class ProfileTab extends StatelessWidget {
                 onTap:(){
 
 
-                  Get.toNamed(AppRoutes.userProfileDetail,arguments: {'id':controller.userId.value ,"isMy":true})?.then((value) {
-                    // controller.refreshHome();
+                  Get.toNamed(AppRoutes.userProfileDetail,arguments: {'id':controller.userId.value ,"isMy":true,"fromChat":false})?.then((value) {
+                     controller.loadUserFromStorage();
                   });
                 },
               ),

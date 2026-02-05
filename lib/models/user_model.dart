@@ -36,6 +36,9 @@ class UserData {
 //  dynamic? isBusiness;
   List<String>? additionalImages;
   List<String>? additionalImagesThumb;
+  bool? isBlocked;
+  bool? isMatch;
+  int? isNotification;
 
 
   UserData({
@@ -67,6 +70,9 @@ class UserData {
     this.additionalImages,
     this.additionalImagesThumb,
     this.deviceToken,
+    this.isBlocked,
+    this.isMatch,
+    this.isNotification,
   });
 
   UserData.fromJson(Map<String, dynamic> json) {
@@ -103,6 +109,9 @@ class UserData {
     if(json["additional_images_thumb"]!=null){
       additionalImagesThumb = List<String>.from(json['additional_images_thumb']);
     }
+    isBlocked = json["is_blocked"]??false;
+    isMatch = json["is_match"]??false;
+    isNotification = json["is_notification"]??1;
   }
 
   Map<String, dynamic> toJson() {
@@ -135,6 +144,9 @@ class UserData {
       'additional_images': additionalImages,
       'additional_images_thumb': additionalImagesThumb,
       'device_token': deviceToken,
+      'is_blocked': isBlocked,
+      'is_match': isMatch,
+      'is_notification': isNotification,
     };
   }
 }

@@ -2,8 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:Out2Do/api/api_service.dart';
 import 'package:Out2Do/models/user_model.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -22,10 +25,33 @@ class ChatMessagesController extends GetxController {
   final userImage = "";
 
   var isBlocked = false.obs;
+  final FocusNode messageFocusNode = FocusNode();
 
-  void blockUser() {
-    isBlocked.value = true;
-    // Ithe tusi apni block wali API call vi kar sakde ho
+  void blockUser() async {
+    try {
+      MyProgressBar.showLoadingDialog(context: Get.context!); // Loading start
+      bool success = await ApiService().blockUser(blockedUserId: receiver.value!.id!.toString());
+   // Loading stop
+
+      if (success) {
+        int sId = sender.value!.id!;
+        int rId = receiver.value!.id!;
+
+        // 2. Realtime Database mein DONO paths update karein
+        // Taaki Sender aur Receiver dono ko real-time block dikhe
+        Map<String, dynamic> blockData = {'isBlocked': true};
+        if(messagesList.isNotEmpty){
+          await /*_dbRef*/_currentDbRoot.child('ChatList').child('id_$sId').child('id_$rId').update(blockData);
+          await /*_dbRef*/_currentDbRoot.child('ChatList').child('id_$rId').child('id_$sId').update(blockData);
+        }
+        isBlocked.value = true;
+        Get.back(); // Agar profile details mein hain
+      }
+      MyProgressBar.hideLoadingDialog(context: Get.context!);
+    } catch (e) {
+      MyProgressBar.hideLoadingDialog(context: Get.context!);
+      showCommonSnackbar(title: "Block Error", message: e.toString());
+    }
   }
 
   final MessagesService _service = MessagesService();
@@ -36,10 +62,14 @@ class ChatMessagesController extends GetxController {
   var requestId = "".obs;
   var receiverUnreadCount = 0.obs;
 
-  var refChatList = FirebaseDatabase.instance.ref("ChatList");
+ /* var refChatList = FirebaseDatabase.instance.ref("ChatList");
   var refMessages = FirebaseDatabase.instance.ref("Messages");
-  var refReceiverStatus = FirebaseDatabase.instance.ref("UserStatus");
+  var refReceiverStatus = FirebaseDatabase.instance.ref("UserStatus");*/
 
+  late DatabaseReference _dbRef;
+  late DatabaseReference refChatList;
+  late DatabaseReference refMessages;
+  late DatabaseReference refReceiverStatus;
   RxList<MessagesModel> messagesList = <MessagesModel>[].obs;
 
   late StreamSubscription<DatabaseEvent> _messagesListener;
@@ -56,10 +86,55 @@ class ChatMessagesController extends GetxController {
 
   var isTyping = false.obs;
   Timer? _typingTimer;
+  RxBool isBlockedByOther = false.obs;
+
+  //final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+
+  late DatabaseReference _dbRefWeb;
+  late DatabaseReference refChatListWeb;
+  late DatabaseReference refMessagesWeb;
+  late DatabaseReference refReceiverStatusWeb;
+
+  void listenToBlockStatus() {
+    int sId = sender.value!.id!;
+    int rId = receiver.value!.id!;
+
+    // Aapke structure ke hisaab se path: ChatList/id_SENDER/id_RECEIVER
+    /*_dbRef*/_currentDbRoot.child('ChatList').child('id_$sId').child('id_$rId').child('isBlocked')
+        .onValue.listen((event) {
+      if (event.snapshot.exists) {
+        isBlocked.value = event.snapshot.value as bool;
+      }
+    });
+  }
+
+
+  String getChatId(int u1, int u2) {
+    return u1 < u2 ? "${u1}_$u2" : "${u2}_$u1";
+  }
+
+
+
+  void _initDatabaseByPlatform() {
+    if (kIsWeb) {
+      // WEB: URL ke saath initialize
+      _dbRefWeb = FirebaseDatabase.instance.ref();
+      refChatListWeb = _dbRefWeb.child("ChatList");
+      refMessagesWeb = _dbRefWeb.child("Messages");
+      refReceiverStatusWeb = _dbRefWeb.child("UserStatus");
+    } else {
+      // MOBILE: Default instance
+      _dbRef = FirebaseDatabase.instance.ref();
+      refChatList = _dbRef.child("ChatList");
+      refMessages= _dbRef.child("Messages");
+      refReceiverStatus = _dbRef.child("UserStatus");
+    }
+  }
 
   @override
   void onInit() {
     super.onInit();
+    _initDatabaseByPlatform();
 
     var args = Get.arguments as Map;
     sender.value = UserData.fromJson(args["sender"] as Map<String, dynamic>);
@@ -70,6 +145,10 @@ class ChatMessagesController extends GetxController {
     } else {
       requestId.value = "${receiver.value?.id}_${sender.value?.id}";
     }
+    isBlocked.value = receiver.value!.isBlocked??false;
+
+
+   print("receiver ${receiver.value!.isBlocked}");
     initialState();
     textController.addListener(_onTextChanged);
 
@@ -182,6 +261,7 @@ class ChatMessagesController extends GetxController {
     await updateMyUnreadCount();
     await getReceiverUnreadCount();
     await getReceiverStatus();
+    listenToBlockStatus();
   }
 
 /*  void sendMessage() {
@@ -206,8 +286,12 @@ class ChatMessagesController extends GetxController {
     });
   }*/
 
-
+  DatabaseReference get _currentMessagesRef => kIsWeb ? refMessagesWeb : refMessages;
+  DatabaseReference get _currentChatListRef => kIsWeb ? refChatListWeb : refChatList;
+  DatabaseReference get _currentStatusRef => kIsWeb ? refReceiverStatusWeb : refReceiverStatus;
+  DatabaseReference get _currentDbRoot => kIsWeb ? _dbRefWeb : _dbRef;
   Future<void> sendMessage() async {
+
     if (textController.text.trim().isEmpty) return;
 
 
@@ -221,7 +305,8 @@ class ChatMessagesController extends GetxController {
       "timestamp": timeStamp,
       "requestId": requestId.value,
     };
-    refMessages.child(requestId.value).push().set(body);
+   // refMessages.child(requestId.value).push().set(body);
+    _currentMessagesRef.child(requestId.value).push().set(body);
 
     // Update History list
     var body2 = <String, dynamic>{
@@ -229,22 +314,32 @@ class ChatMessagesController extends GetxController {
       "timestamp": timeStamp,
       "sender": sender.value?.id,
       "receiver": receiver.value?.id,
+      "isBlocked":false
     };
 
     // Update History list for me
-    refChatList
+   /* refChatList
         .child("id_${sender.value?.id}")
+        .child("id_${receiver.value?.id}")
+        .update(body2);*/
+
+    _currentChatListRef.child("id_${sender.value?.id}")
         .child("id_${receiver.value?.id}")
         .update(body2);
 
     // Update History list for receiver by updating unread count
     body2["unreadCount"] = receiverUnreadCount.value + 1;
-    refChatList
+ /*   refChatList
+        .child("id_${receiver.value?.id}")
+        .child("id_${sender.value?.id}")
+        .update(body2);*/
+
+    _currentChatListRef
         .child("id_${receiver.value?.id}")
         .child("id_${sender.value?.id}")
         .update(body2);
 
-    if ((receiver.value?.deviceToken ?? "").isNotEmpty) {
+    if ((receiver.value?.deviceToken ?? "").isNotEmpty && receiver.value!.isNotification ==1) {
       sendNotification(message: textController.text.trim());
     }
     textController.text = "";
@@ -276,7 +371,7 @@ class ChatMessagesController extends GetxController {
       if (isFirstLaunch.value) {
         MyProgressBar.showLoadingDialog(context: context);
       }
-      _messagesListener = refMessages
+      _messagesListener = /*refMessages*/_currentMessagesRef
           .child(requestId.value)
           .onValue
           .listen((DatabaseEvent event) {
@@ -294,11 +389,12 @@ class ChatMessagesController extends GetxController {
           if (context.mounted) {
             MyProgressBar.hideLoadingDialog(context: context);
           }
-          if ((Get.arguments as Map)["setDefault"] == true &&
-              messagesList.isEmpty) {
-            textController.text =
-            "Hi ${receiver.value?.firstName ?? ""}, I want to hire you as my trainer.";
+          if ((Get.arguments as Map)["setDefault"] == true){
+            Future.delayed(const Duration(milliseconds: 300), () {
+              messageFocusNode.requestFocus();
+            });
           }
+
           isFirstLaunch.value = false;
         }
       });
@@ -307,20 +403,21 @@ class ChatMessagesController extends GetxController {
       if (isFirstLaunch.value) {
         MyProgressBar.hideLoadingDialog(context: context);
         isFirstLaunch.value = false;
+
       }
     }
   }
 
   Future<void> updateMyUnreadCount() async {
     try {
-      _myUnreadCountListener = refChatList
+      _myUnreadCountListener = /*refChatList*/_currentChatListRef
           .child("id_${sender.value?.id}")
           .child("id_${receiver.value?.id}")
           .onValue
           .listen((DatabaseEvent event) {
         var data = event.snapshot.value;
         if (data != null && data is Map) {
-          refChatList
+          /*refChatList*/_currentChatListRef
               .child("id_${sender.value?.id}")
               .child("id_${receiver.value?.id}")
               .child("unreadCount")
@@ -334,7 +431,7 @@ class ChatMessagesController extends GetxController {
 
   Future<void> getReceiverUnreadCount() async {
     try {
-      _receiverUnreadCountListener = refChatList
+      _receiverUnreadCountListener = /*refChatList*/_currentChatListRef
           .child("id_${receiver.value?.id}")
           .child("id_${sender.value?.id}")
           .onValue
@@ -354,7 +451,7 @@ class ChatMessagesController extends GetxController {
 
   Future<void> getReceiverStatus() async {
     try {
-      _receiverStatusListener = refReceiverStatus
+      _receiverStatusListener = /*refReceiverStatus*/_currentStatusRef
           .child("${receiver.value?.id}")
           .onValue
           .listen((DatabaseEvent event) {
@@ -381,9 +478,39 @@ class ChatMessagesController extends GetxController {
     }
   }
 
+
+  void unBlockUser() async {
+    try {
+      MyProgressBar.showLoadingDialog(context: Get.context!); // Loading start
+      bool success = await ApiService().unblockUser(blockedUserId: receiver.value!.id!.toString());
+      // Loading stop
+
+      if (success) {
+        int sId = sender.value!.id!;
+        int rId = receiver.value!.id!;
+
+        // 2. Realtime Database mein DONO paths update karein
+        // Taaki Sender aur Receiver dono ko real-time block dikhe
+        Map<String, dynamic> blockData = {'isBlocked': false};
+        if(messagesList.isNotEmpty){
+          await /*_dbRef*/_currentDbRoot.child('ChatList').child('id_$sId').child('id_$rId').update(blockData);
+          await /*_dbRef*/_currentDbRoot.child('ChatList').child('id_$rId').child('id_$sId').update(blockData);
+        }
+
+        isBlocked.value = false;
+
+      }
+      MyProgressBar.hideLoadingDialog(context: Get.context!);
+    } catch (e) {
+      MyProgressBar.hideLoadingDialog(context: Get.context!);
+      showCommonSnackbar(title: "Block Error", message: e.toString());
+    }
+  }
+
   @override
   void onClose() {
     scrollController.dispose();
+    messageFocusNode.dispose();
   //  messages.clear();
     _messagesListener.cancel();
     _myUnreadCountListener.cancel();

@@ -131,6 +131,8 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
                       top: 40,
                       left: 16,
                       child: _circleIcon(Icons.arrow_back, () {
+                        controller.fromChats.value?
+                        Get.back(result: {'action': controller.isBlocked.value?"blocked":"unblock"}):
                         Get.back(result: true);
                       }),
                     ),
@@ -364,26 +366,50 @@ class _UserProfileDetailScreenState extends State<UserProfileDetailScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 8,
       items: [
+        if(!controller.isConnected.value)
         PopupMenuItem(
           value: 'connect',
           child: _buildMenuItem(Icons.person_add, "Connect", MyColors.black),
         ),
-      /*  PopupMenuItem(
+
+        if(controller.isConnected.value)
+          if(!controller.isBlocked.value)
+            PopupMenuItem(
+              value: 'message',
+              child: _buildMenuItem(Icons.send, "Send Messages", MyColors.black),
+            ),
+
+
+        if(controller.isConnected.value)
+          if(!controller.isBlocked.value)
+        PopupMenuItem(
           value: 'block',
           child: _buildMenuItem(Icons.block, "Block User", MyColors.black),
         ),
+
+        if(controller.isConnected.value)
+          if(controller.isBlocked.value)
+            PopupMenuItem(
+              value: 'unblock',
+              child: _buildMenuItem(Icons.block, "UnBlock User", MyColors.black),
+            ),
+        if(controller.isConnected.value)
         PopupMenuItem(
           value: 'report',
           child: _buildMenuItem(Icons.report_problem, "Report User", MyColors.black),
-        ),*/
+        ),
       ],
     ).then((value) {
       if (value == 'connect') {
         controller.connectUser();
       } else if (value == 'block') {
         controller.blockUser();
-      } else if (value == 'report') {
+      } else if (value == 'unblock') {
+        controller.unblockUser();
+      }else if (value == 'report') {
         controller.reportUser();
+      }else if (value == 'message') {
+        controller.sendMessage();
       }
     });
   }

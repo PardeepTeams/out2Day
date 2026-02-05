@@ -198,6 +198,11 @@ class LoginController extends GetxController {
   void onInit() {
     super.onInit();
     getToken();
+
+    if (Get.arguments != null) {
+      phoneController.text = Get.arguments['phone'] ?? "";
+      countryCode.value = Get.arguments['countryCode'] ?? "";
+    }
   }
 
   /// 🔥 MAIN LOGIN FUNCTION
@@ -223,8 +228,6 @@ class LoginController extends GetxController {
           theme: RecaptchaVerifierTheme.light,
         );
 
-
-
         try {
           await verifier.render();
 
@@ -236,7 +239,7 @@ class LoginController extends GetxController {
 
           confirmationResult = result;
           MyProgressBar.hideLoadingDialog(context: context);
-          Get.offNamed(AppRoutes.otp, arguments: {
+          Get.toNamed(AppRoutes.otp, arguments: {
             'phone': phoneController.text.trim(),
             'countryCode': countryCode.value,
             'isWeb': true,
@@ -251,8 +254,11 @@ class LoginController extends GetxController {
         }
 
       } else {
-        /// ✅ MOBILE LOGIC (Using verifyPhoneNumber)
-        await _auth.verifyPhoneNumber(
+        if(verificationId.isNotEmpty){
+          verificationId = "";
+        }
+        final FirebaseAuth _auth1 = FirebaseAuth.instance;
+        await _auth1.verifyPhoneNumber(
           phoneNumber: phoneNumber,
           timeout: const Duration(seconds: 60),
           verificationCompleted: (PhoneAuthCredential credential) async {
@@ -271,7 +277,7 @@ class LoginController extends GetxController {
             MyProgressBar.hideLoadingDialog(context: context);
             verificationId = verId;
 
-            Get.offNamed(AppRoutes.otp, arguments: {
+            Get.toNamed(AppRoutes.otp, arguments: {
               'phone': phoneController.text.trim(),
               'countryCode': countryCode.value,
               'verificationId': verificationId,
@@ -282,6 +288,17 @@ class LoginController extends GetxController {
           },
           codeAutoRetrievalTimeout: (String verId) {
             verificationId = verId;
+            MyProgressBar.hideLoadingDialog(context: context);
+            verificationId = verId;
+
+            Get.toNamed(AppRoutes.otp, arguments: {
+              'phone': phoneController.text.trim(),
+              'countryCode': countryCode.value,
+              'verificationId': verificationId,
+              'isWeb': false,
+              "deviceToken":deviceToken,
+              'confirmationResult': null, // Web placeholder
+            });
           },
         );
       }

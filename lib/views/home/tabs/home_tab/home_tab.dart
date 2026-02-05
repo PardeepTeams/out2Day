@@ -59,7 +59,7 @@ class HomeTab extends StatelessWidget {
                 );
               } else {
                 /// SINGLE VIEW
-                return  ListView.builder(
+                return SizedBox();/* ListView.builder(
                   padding: const EdgeInsets.all(12),
                   itemCount: controller.profiles.length,
                   itemBuilder: (_, index) {
@@ -69,7 +69,7 @@ class HomeTab extends StatelessWidget {
                       controller: controller,
                     );
                   },
-                );;
+                );;*/
               }
             }),
           ),

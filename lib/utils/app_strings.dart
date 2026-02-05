@@ -3,7 +3,7 @@ class AppStrings {
   static const apiFormet = "yyyy-MM-dd";
   static const somethingWrong = "Something went wrong";
   static const loginWelcome = "What is your\nphone number?";
-  static const loginWelcomeDes = "Tap “Conitnue” to get an OTP confirmation to help to you Out2do. We would like your phone number.";
+  static const loginWelcomeDes = "Verify your Out2Day account by entering your phone number. Tap Continue to get your OTP.";
   static const hintPhoneNumber = "Phone Number";
   static const btnContinue = "Continue";
   static const String termsNote = "You agree to our ";

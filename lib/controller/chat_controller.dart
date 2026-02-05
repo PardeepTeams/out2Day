@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import '../models/chat_responseModel.dart';
 import '../models/chat_user.dart';
 import '../routes/app_routes.dart';
+import 'home_controller.dart';
 
 class ChatController extends GetxController {
 //  final RxList<ChatUser> chats = <ChatUser>[].obs;
@@ -101,7 +102,18 @@ class ChatController extends GetxController {
       // API hit
       ChatResponseModel response = await ApiService().fetchFirebaseChats();
       isLoading.value = false;
-      chats.assignAll(response.chats ?? []);
+      List<Chat> fetchedChats = response.chats ?? [];
+
+      // 3. Sorting Logic: Latest timestamp sabse upar (Descending Order)
+      fetchedChats.sort((a, b) {
+        // Agar timestamp null ho to use 0 treat karein
+        int timeA = a.timestamp ?? 0;
+        int timeB = b.timestamp ?? 0;
+        return timeB.compareTo(timeA); // B bada hai to wo pehle aayega
+      });
+      chats.assignAll(fetchedChats);
+
+
       matchesList.assignAll(response.matches ?? []);
 
     } catch (e) {
@@ -137,20 +149,38 @@ class ChatController extends GetxController {
       'receiver':receiver.toJson(),
     })?.then((value) {
        loadChats();
+       refreshHomeBadge();
+
       if (value == true) {
         print("Data updated, refreshing UI...");
       }
     });
   }
 
-  void openRecentChat(UserData data) {
 
+  void refreshHomeBadge() {
+    try {
+      // Iska naam wahi rakhein jo aapke HomeController class ka hai
+      if (Get.isRegistered<HomeController>()) {
+        final homeController = Get.find<HomeController>();
+        // Yahan wo function call karein jo unread API hit karta hai
+        homeController.updateUnreadBadge();
+        print("Home badge refreshed successfully");
+      }
+    } catch (e) {
+      print("HomeController not found in memory: $e");
+    }
+  }
+
+  void openRecentChat(UserData data) {
     Get.toNamed(AppRoutes.chatMessages,
       arguments: <String, dynamic>{
         'sender': StorageProvider.getUserData()!.toJson(),
         'receiver': data.toJson(),
+        "setDefault":true
       },)?.then((value) {
       loadChats();
+      refreshHomeBadge();
       if (value == true) {
         print("Data updated, refreshing UI...");
       }

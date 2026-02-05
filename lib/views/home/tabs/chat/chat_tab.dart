@@ -42,8 +42,9 @@ class ChatTab extends StatelessWidget {
                   MyColors.baseColor
               ),
             ):SizedBox(),
-
-            const SizedBox(height: 6),
+            controller.matchesList.isNotEmpty?
+            const SizedBox(height: 6):SizedBox(),
+            controller.matchesList.isNotEmpty?
             SizedBox(
               height: 60,
               child: ListView.builder(
@@ -54,16 +55,16 @@ class ChatTab extends StatelessWidget {
                   return _recentMatchItem(controller.matchesList[index]);
                 },
               ),
-            ),
-            const SizedBox(height: 12),
-            controller.chats.isEmpty?
+            ):SizedBox(),
+           // controller.matchesList.isNotEmpty?
+            const SizedBox(height: 12),//:SizedBox(),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: mediumTextLarge(
                   AppStrings.messages,
                   MyColors.baseColor
               ),
-            ):SizedBox(),
+            ),
             const SizedBox(height: 6),
             Expanded(child: Obx(() {
               if (controller.chats.isEmpty) {
@@ -79,7 +80,10 @@ class ChatTab extends StatelessWidget {
 
                   return InkWell(
                       onTap: () => controller.openChat(index),
-                      borderRadius: BorderRadius.circular(16),
+                      splashColor: Colors.transparent,        // 🛠️ Tap karne par failne wala color remove karega
+                      highlightColor: Colors.transparent,     // 🛠️ Tap karte waqt jo background color aata hai use remove karega
+                      hoverColor: Colors.transparent,
+                      borderRadius: BorderRadius.circular(0),
                       child: _messageTile(chat)
                   );
                 },
@@ -164,7 +168,42 @@ class ChatTab extends StatelessWidget {
                 radius: 32,
                 backgroundColor: Colors.grey.shade200,
                 child: ClipOval(
-                  child: CachedNetworkImage(
+                  child:CachedNetworkImage(
+                    imageUrl: data.additionalImagesThumb!.first, // Aapka variable
+                    fit: BoxFit.cover,
+                    width: 64,
+                    height: 64,
+
+                    // ✅ Cache settings: Agar image cache mein hai toh bina loader ke turant dikhegi
+                    placeholderFadeInDuration: Duration.zero,
+                    fadeInDuration: const Duration(milliseconds: 500), // Puranay 1500ms se kam kiya taaki lag na lage
+
+                    // ✅ Image cache management
+                    memCacheWidth: 200, // Memory optimization
+                    memCacheHeight: 200,
+
+                    // ✅ Iska use karein placeholder ki jagah
+                    // Ye check karta hai ki download ho raha hai ya nahi
+               /*     progressIndicatorBuilder: (context, url, downloadProgress) {
+                      // Agar downloadProgress null hai (matlab cache se mil gayi), toh kuch mat dikhao
+                      if (downloadProgress.progress == null) return const SizedBox();
+
+                      // Agar download ho rahi hai (nhi hai cache mein), tab loader dikhao
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: MyColors.baseColor,
+                        ),
+                      );
+                    },*/
+
+                    errorWidget: (context, url, error) => const Icon(
+                      Icons.person,
+                      size: 30,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  /* CachedNetworkImage(
                     imageUrl: data.additionalImagesThumb!.first,
                     fit: BoxFit.cover,
                     width: 64,
@@ -184,7 +223,7 @@ class ChatTab extends StatelessWidget {
                         size: 30,
                         color: Colors.grey
                     ),
-                  ),
+                  ),*/
                 ),
               )
               /*    if (data['online'])
@@ -209,7 +248,7 @@ class ChatTab extends StatelessWidget {
   Widget _messageTile(Chat data) {
     var imageUrl = data.receiver != controller.userDetails.value?.id
         ? (data.receiverDetail?.additionalImagesThumb!.first ?? "")
-        : (data.senderDetail?.additionalImages!.first ?? "");
+        : (data.senderDetail?.additionalImagesThumb!.first ?? "");
 
     var name = data.receiver != controller.userDetails.value?.id
         ? (data.receiverDetail?.firstName ?? "")
@@ -225,6 +264,41 @@ class ChatTab extends StatelessWidget {
                 backgroundColor: Colors.grey.shade200,
                 child: ClipOval(
                   child: CachedNetworkImage(
+                    imageUrl: imageUrl, // Aapka variable
+                    fit: BoxFit.cover,
+                    width: 64,
+                    height: 64,
+
+                    // ✅ Cache settings: Agar image cache mein hai toh bina loader ke turant dikhegi
+                    placeholderFadeInDuration: Duration.zero,
+                    fadeInDuration: const Duration(milliseconds: 500), // Puranay 1500ms se kam kiya taaki lag na lage
+
+                    // ✅ Image cache management
+                    memCacheWidth: 200, // Memory optimization
+                    memCacheHeight: 200,
+
+                    // ✅ Iska use karein placeholder ki jagah
+                    // Ye check karta hai ki download ho raha hai ya nahi
+                  /*  progressIndicatorBuilder: (context, url, downloadProgress) {
+                      // Agar downloadProgress null hai (matlab cache se mil gayi), toh kuch mat dikhao
+                      if (downloadProgress.progress == null) return const SizedBox();
+
+                      // Agar download ho rahi hai (nhi hai cache mein), tab loader dikhao
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: MyColors.baseColor,
+                        ),
+                      );
+                    },*/
+
+                    errorWidget: (context, url, error) => const Icon(
+                      Icons.person,
+                      size: 30,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  /*CachedNetworkImage(
                     imageUrl: imageUrl,
                     fit: BoxFit.cover,
                     width: 64,
@@ -246,7 +320,7 @@ class ChatTab extends StatelessWidget {
                         size: 30,
                         color: Colors.grey
                     ),
-                  ),
+                  ),*/
                 ),
               )
             /*  if (data['online'])

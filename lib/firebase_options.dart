@@ -31,13 +31,14 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-      apiKey: "AIzaSyAQxXsGeh_xcM3CZflwYHNBoEfPhFLdTQY",
-      authDomain: "out2day-d9410.firebaseapp.com",
-      projectId: "out2day-d9410",
-      storageBucket: "out2day-d9410.firebasestorage.app",
-      messagingSenderId: "382007031902",
-      appId: "1:382007031902:web:5fbe10e38a573bd6501ccf",
-      measurementId: "G-3MGH8QLBEW"
+    apiKey: "AIzaSyAQxXsGeh_xcM3CZflwYHNBoEfPhFLdTQY",
+    authDomain: "out2day-d9410.firebaseapp.com",
+    projectId: "out2day-d9410",
+    storageBucket: "out2day-d9410.firebasestorage.app",
+    messagingSenderId: "382007031902",
+    appId: "1:382007031902:web:5fbe10e38a573bd6501ccf",
+    measurementId: "G-3MGH8QLBEW",
+    databaseURL: "https://out2day-d9410-default-rtdb.firebaseio.com",
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -46,6 +47,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '382007031902',
     projectId: 'out2day-d9410',
     storageBucket: 'out2day-d9410.firebasestorage.app',
+    databaseURL: 'https://out2day-d9410-default-rtdb.firebaseio.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -58,22 +60,24 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-      apiKey: "AIzaSyDfNmfLPp60vISmcWAmKn5Dyu4h_xCENrk",
-      authDomain: "out2do-5fc62.firebaseapp.com",
-      projectId: "out2do-5fc62",
-      storageBucket: "out2do-5fc62.firebasestorage.app",
-      messagingSenderId: "1078288114484",
-      appId: "1:1078288114484:web:d38422024bc0a82c803b61",
-      measurementId: "G-JTLXZ1395Q"
+    apiKey: "AIzaSyAQxXsGeh_xcM3CZflwYHNBoEfPhFLdTQY",
+    authDomain: "out2day-d9410.firebaseapp.com",
+    projectId: "out2day-d9410",
+    storageBucket: "out2day-d9410.firebasestorage.app",
+    messagingSenderId: "382007031902",
+    appId: "1:382007031902:web:5fbe10e38a573bd6501ccf",
+    measurementId: "G-3MGH8QLBEW",
+    databaseURL: 'https://out2day-d9410-default-rtdb.firebaseio.com',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-      apiKey: "AIzaSyAQxXsGeh_xcM3CZflwYHNBoEfPhFLdTQY",
-      authDomain: "out2day-d9410.firebaseapp.com",
-      projectId: "out2day-d9410",
-      storageBucket: "out2day-d9410.firebasestorage.app",
-      messagingSenderId: "382007031902",
-      appId: "1:382007031902:web:5fbe10e38a573bd6501ccf",
-      measurementId: "G-3MGH8QLBEW"
+    apiKey: "AIzaSyAQxXsGeh_xcM3CZflwYHNBoEfPhFLdTQY",
+    authDomain: "out2day-d9410.firebaseapp.com",
+    projectId: "out2day-d9410",
+    storageBucket: "out2day-d9410.firebasestorage.app",
+    messagingSenderId: "382007031902",
+    appId: "1:382007031902:web:5fbe10e38a573bd6501ccf",
+    measurementId: "G-3MGH8QLBEW",
+    databaseURL: 'https://out2day-d9410-default-rtdb.firebaseio.com',
   );
 }

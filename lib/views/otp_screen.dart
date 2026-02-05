@@ -1,7 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../routes/app_routes.dart';
 import 'package:Out2Do/utils/app_strings.dart';
 import 'package:Out2Do/utils/common_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../controller/login_controller.dart';
 import '../controller/otp_controller.dart';
 import '../widgets/common_button.dart';
 import '../utils/colors.dart';
@@ -65,7 +69,10 @@ class OtpScreen extends StatelessWidget {
                               color: MyColors.black,
                               size: 18,
                             ),
-                            onPressed: () => Get.back(),
+                            onPressed: (){
+                              FirebaseAuth.instance.signOut();
+                              Get.back();
+                            },
                           ),
                         ),
                     ) ,
@@ -132,9 +139,51 @@ class OtpScreen extends StatelessWidget {
                   const SizedBox(height: 5),
 
                   /// Resend OTP
+                  /// Resend OTP Section
+         /*         Align(
+                    alignment: Alignment.center,
+                    child: Obx(() {
+                      return controller.isResendAvailable.value
+                          ? GestureDetector(
+                        onTap: () {
+                          dismissKeyboard(context);
+                          controller.resendOtp(context);
+                        },
+                        child: const Text(
+                          AppStrings.resendOTP,
+                          style: TextStyle(
+                            fontFamily: "medium",
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: MyColors.black,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ):SizedBox();
+                          *//*: RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
+                          style: const TextStyle(
+                            fontFamily: "regular",
+                            fontSize: 16,
+                            color: MyColors.black,
+                          ),
+                          children: [
+                            const TextSpan(text: "Resend OTP in "),
+                            TextSpan(
+                              text: "00:${controller.seconds.value.toString().padLeft(2, '0')}",
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      );*//*
+                    }),
+                  )*/
                   Align(
                     alignment: Alignment.center,
-                    child:  RichText(
+                    child: Obx(() {
+                      return controller.isResendAvailable.value
+                          ?  RichText(
                         textAlign: TextAlign.center,
                         text: TextSpan(
                           style: const TextStyle(
@@ -168,9 +217,9 @@ class OtpScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                      )
-                      ,
-                  )
+                      ):SizedBox();
+                    }
+                  ))
                 ],
               ),
             )),

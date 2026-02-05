@@ -8,6 +8,10 @@ import '../../../../models/messages_model.dart';
 import '../../../../routes/app_routes.dart';
 import '../../../../utils/colors.dart';
 import '../../../../utils/common_styles.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
+import '../../../report_user_screen.dart'; // 👈 Import add karein
+
 
 
 class ChatMessagesScreen extends StatelessWidget {
@@ -29,19 +33,52 @@ class ChatMessagesScreen extends StatelessWidget {
         ),
         title:InkWell(
           onTap: (){
-            Get.toNamed(AppRoutes.userProfileDetail,/*arguments: {'id': 3}*/)?.then((value) {
-              // controller.refreshHome();
+            Get.toNamed(AppRoutes.ewProfileDetail, arguments: {'id': controller.receiver.value!.id, "isMy": false,"fromChat":true})?.then((result) {
+              if (result != null && result is Map) {
+                if (result['action'] == 'blocked') {
+                  controller.isBlocked.value = true;
+                }else if(result['action'] == 'unblock'){
+                  controller.isBlocked.value = false;
+                }
+              }
             });
           },
           child:  Row(
             children: [
               CircleAvatar(
                 radius: 18,
+                backgroundColor: Colors.grey.shade200,
+                child: ClipOval(
+                  child:CachedNetworkImage(
+                    imageUrl: controller.receiver.value?.additionalImagesThumb!.first??"", // Aapka variable
+                    fit: BoxFit.cover,
+                    width: 64,
+                    height: 64,
+
+                    // ✅ Cache settings: Agar image cache mein hai toh bina loader ke turant dikhegi
+                    placeholderFadeInDuration: Duration.zero,
+                    fadeInDuration: const Duration(milliseconds: 500), // Puranay 1500ms se kam kiya taaki lag na lage
+
+                    // ✅ Image cache management
+                    memCacheWidth: 200, // Memory optimization
+                    memCacheHeight: 200,
+
+
+                    errorWidget: (context, url, error) => const Icon(
+                      Icons.person,
+                      size: 30,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
+             /* CircleAvatar(
+                radius: 18,
                 backgroundImage:  (controller.receiver.value?.additionalImagesThumb!.first ?? "").isNotEmpty
                     ? NetworkImage(
                     controller.receiver.value?.additionalImagesThumb!.first ?? "")
                     : const AssetImage("assets/app_icon/app_logo.png"),
-              ),
+              ),*/
               const SizedBox(width: 10),
               semiboldText(
                 controller.receiver.value!.firstName??"",
@@ -55,13 +92,19 @@ class ChatMessagesScreen extends StatelessWidget {
             onSelected: (value) {
               if (value == 'block') {
                 controller.blockUser();
-              } else if (value == 'report') {
-
+              }else if (value == 'unblock') {
+                controller.unBlockUser();
+              }
+              else if (value == 'report') {
+                Get.to(() => ReportUserScreen(
+                  userName: controller.receiver.value!.firstName ?? "User", // User ka naam
+                  userId: controller.receiver.value!.id.toString(),         // User ki ID
+                ));
               }
             },
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             itemBuilder: (BuildContext context) => [
-              // 🚫 Block Option
+             if(!controller.isBlocked.value)
               const PopupMenuItem<String>(
                 value: 'block',
                 child: Row(
@@ -76,6 +119,21 @@ class ChatMessagesScreen extends StatelessWidget {
                   ],
                 ),
               ),
+              if(controller.isBlocked.value)
+                const PopupMenuItem<String>(
+                  value: 'unblock',
+                  child: Row(
+                    children: [
+                      Icon(Icons.block, color: MyColors.black, size: 20),
+                      SizedBox(width: 10),
+                      Text("UnBlock User", style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 16,
+                          fontFamily: "medium",
+                          color: MyColors.black)),
+                    ],
+                  ),
+                ),
               // 🚩 Report Option
               const PopupMenuItem<String>(
                 value: 'report',
@@ -210,6 +268,9 @@ class ChatMessagesScreen extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller.textController,
+              focusNode: controller.messageFocusNode,
+              keyboardType: TextInputType.multiline, // 🛠️ Isse space events behtar handle hote hain
+              textInputAction: TextInputAction.newline,
               style: TextStyle(
                 fontFamily: "regular",
                 fontWeight: FontWeight.w400,

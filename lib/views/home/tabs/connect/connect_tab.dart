@@ -32,7 +32,7 @@ class ConnectTab extends StatelessWidget {
             );
           }
 
-          return Stack(
+          return SizedBox() /*Stack(
             alignment: Alignment.center,
             children: controller.profiles
                 .map((profile) => SwipeCard(
@@ -40,7 +40,7 @@ class ConnectTab extends StatelessWidget {
               controller: controller,
             ))
                 .toList(),
-          );
+          )*/;
         }),
       ),
     );

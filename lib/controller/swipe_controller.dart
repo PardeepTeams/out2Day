@@ -1,7 +1,7 @@
 import 'package:Out2Do/api/storage_helper.dart';
 import 'package:get/get.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
-
+import 'package:flutter/material.dart';
 import '../api/api_service.dart';
 import '../models/user_model.dart';
 import '../routes/app_routes.dart';
@@ -18,13 +18,23 @@ class SwipeController extends GetxController {
   var isLoading = true.obs;
   var isGridView = false.obs;
   var commonIndex = 0.obs;
+  var isSwitching = false.obs;
 
   @override
   void onInit() {
     super.onInit();
     fetchProfiles();
   }
+  void toggleView() async {
+    isSwitching.value = true; // Loader Start
+    isGridView.toggle();
+    commonIndex.value = 0;
 
+    // Jab hum Swipe view (Stack) mein jaate hain, toh heavy rendering hoti hai
+    await WidgetsBinding.instance.endOfFrame;
+    await Future.delayed(const Duration(milliseconds: 600));
+    isSwitching.value = false; // Loader Stop
+  }
 
 
   void fetchProfiles() async {
@@ -77,12 +87,16 @@ class SwipeController extends GetxController {
   //    profiles.assignAll(staticUsers);
       var users = await ApiService().fetchHomeUsers();
       profiles.assignAll(users);
+
       gridProfiles.assignAll(users);
+      await WidgetsBinding.instance.endOfFrame;
+      await Future.delayed(const Duration(milliseconds: 500));
+      isLoading.value = false;
     } catch (e) {
+      isLoading.value = false;
       // Backend wala original message hi show hoyega
       showCommonSnackbar(title: "Error", message: e.toString());
-    } finally {
-      isLoading.value = false;
+
     }
   }
 
@@ -93,13 +107,21 @@ class SwipeController extends GetxController {
 
   void removeFromGridLists(int userId) {
     gridProfiles.removeWhere((user) => user.id == userId);
-
+    profiles.removeWhere((user) => user.id == userId);
     gridProfiles.refresh();
+    profiles.refresh();
+  }
+
+  void removeFromProfiles(int userId) {
+    profiles.removeWhere((user) => user.id == userId);
+    profiles.refresh();
   }
 
   void handleUserAction(UserData targetUser, bool isLiked) {
     if (isLiked) {
       markInterestedAndHandleMatch(targetUser);
+    }else{
+      markNotInterestedAndHandleMatch(targetUser);
     }
   }
 
@@ -126,6 +148,7 @@ class SwipeController extends GetxController {
                    arguments: <String, dynamic>{
                   'sender': StorageProvider.getUserData()!.toJson(),
                   'receiver': user.toJson(),
+                   "setDefault":true
                 }
                 );
                 fetchProfiles();
@@ -133,7 +156,30 @@ class SwipeController extends GetxController {
             barrierDismissible: false,
           );
         }
-        removeFromGridLists(user.id!);
+
+      }else{
+        print("MatchError $response}");
+      }
+
+    } catch (e) {
+      MyProgressBar.hideLoadingDialog(context: Get.context!);
+      print("MatchResponse  $e");
+    }
+  }
+
+
+
+  Future<void> markNotInterestedAndHandleMatch(UserData user) async {
+    print("notItrested");
+    try {
+      MyProgressBar.showLoadingDialog(context: Get.context!);
+
+      final response = await ApiService().markUserNotInterested(
+        interestedId: user.id.toString(),
+      );
+      MyProgressBar.hideLoadingDialog(context: Get.context!);
+      if (response['status'] == 1) {
+      //  removeFromGridLists(user.id!);
       }else{
         print("MatchError $response}");
       }
@@ -163,10 +209,12 @@ class SwipeController extends GetxController {
 
 
   void connectFromGrid(UserData user) {
+    print("MatchUserPardeep  ${user.id}");
     int swipeIndex = profiles.indexWhere((element) => element.id == user.id);
     if (swipeIndex != -1) {
       swiperController.swipe(CardSwiperDirection.right);
     }
+    removeFromGridLists(user.id!);
     handleUserAction(user, true);
   }
 
@@ -175,6 +223,31 @@ class SwipeController extends GetxController {
     if (swipeIndex != -1) {
       swiperController.swipe(CardSwiperDirection.left);
     }
+    removeFromGridLists(user.id!);
+
     handleUserAction(user, false);
+  }
+
+  void swipeRight(UserData user) {
+    print("MatchUserPardeep  ${user.id}");
+    int swipeIndex = profiles.indexWhere((element) => element.id == user.id);
+    if (swipeIndex != -1) {
+      swiperController.swipe(CardSwiperDirection.right);
+    }
+    removeFromProfiles(user.id!);
+    if(profiles.isEmpty){
+      profiles.assignAll(gridProfiles);
+    }
+  }
+
+  void swipeLeft(UserData user) {
+    int swipeIndex = profiles.indexWhere((element) => element.id == user.id);
+    if (swipeIndex != -1) {
+      swiperController.swipe(CardSwiperDirection.left);
+    }
+    removeFromProfiles(user.id!);
+    if(profiles.isEmpty){
+      profiles.assignAll(gridProfiles);
+    }
   }
 }

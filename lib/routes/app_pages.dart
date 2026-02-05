@@ -8,6 +8,7 @@ import 'package:Out2Do/views/home/tabs/chat/chat_messages_screen.dart';
 import 'package:Out2Do/views/privacy_policy_screen.dart';
 import 'package:Out2Do/views/profile_creation_screen.dart';
 import 'package:Out2Do/views/profile_detail_screen.dart';
+import 'package:Out2Do/views/report_user_screen.dart';
 import 'package:get/get.dart';
 import '../views/business/business_tab_screen.dart';
 import '../views/faq_screen.dart';

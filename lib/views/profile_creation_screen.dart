@@ -761,7 +761,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen>
           Positioned(
             top: 5, right: 5,
             child: GestureDetector(
-              onTap: () => controller.removeImage(index, isNetwork: isNetwork),
+              onTap: () => controller.removeImage(index),
               child: Container(
                 padding: const EdgeInsets.all(5),
                 decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),

@@ -10,6 +10,9 @@ import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import '../../../controller/swipe_controller.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+import 'connect/widgets/swipe_card.dart';
+import 'home_tab/widgets/profile_list_card.dart';
+
 class SwipeCardScreen extends StatelessWidget {
   const SwipeCardScreen({super.key});
 
@@ -22,15 +25,16 @@ class SwipeCardScreen extends StatelessWidget {
       appBar: CommonHomeAppBarStatic(title: "",showGridToggle: true,
         isGridView: controller.isGridView,
         onGridToggle: (){
-        controller.profiles.clear();
+       /* controller.profiles.clear();
         controller.profiles.assignAll(controller.gridProfiles);
-        controller.profiles.refresh();
-        controller.commonIndex.value = 0;
-        controller.isGridView.toggle();
+        controller.profiles.refresh();*/
+          controller.toggleView();
         },),
       body: Obx(() {
-        if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+        if (controller.isLoading.value || controller.isSwitching.value) {
+          return const Center(child: CircularProgressIndicator(
+            color: MyColors.baseColor,
+          ));
         }
         bool allSwiped = !controller.isGridView.value &&
             controller.commonIndex.value >= controller.profiles.length;
@@ -48,16 +52,45 @@ class SwipeCardScreen extends StatelessWidget {
           }
         }
 
-        return controller.isGridView.value
-            ? userGridLayout(controller)
-            : _buildSwipeLayout(controller);
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 400),
+          child: controller.isGridView.value
+              ? userGridLayout(controller)
+              : _buildSwipeLayout(controller),
+        );
+
       }),
     );
   }
 
 
   Widget _buildSwipeLayout(SwipeController controller){
-    return Stack(
+    int currentIndex = controller.commonIndex.value;
+    int totalProfiles = controller.profiles.length;
+
+    // Kitne cards stack mein ek saath dikhane hain (e.g., 5 cards)
+    int displayLimit = 1;
+    int endIndex = (currentIndex + displayLimit) < totalProfiles
+        ? currentIndex + displayLimit
+        : totalProfiles;
+
+    // Sirf zaroori profiles ki sublist nikaalein
+    List<UserData> visibleProfiles = controller.profiles.sublist(currentIndex, endIndex);
+    return  Align(
+        alignment: Alignment.topCenter,
+       child: Padding(padding: EdgeInsets.only(top: 20),
+       child:
+       Stack(
+          alignment: Alignment.center,
+          children: visibleProfiles
+              .map((profile) => SwipeCard(
+            profile: profile,
+            controller: controller,
+          ))
+              .toList(),
+        ))
+    );
+  /*  return Stack(
       children: [
         // 1. Swipeable Cards (Slightly more bottom padding for the buttons)
         Column(
@@ -68,8 +101,8 @@ class SwipeCardScreen extends StatelessWidget {
                 cardsCount: controller.profiles.length,
                 onSwipe: controller.onSwipe,
                 isLoop: false,
-                numberOfCardsDisplayed: controller.profiles.length,
-                backCardOffset: const Offset(0, -30),
+                numberOfCardsDisplayed: controller.profiles.length > 3 ? 3 : controller.profiles.length,
+                backCardOffset: const Offset(0, 0),
                 padding: const EdgeInsets.only(
                     left: 16,
                     right: 16,
@@ -109,7 +142,7 @@ class SwipeCardScreen extends StatelessWidget {
           ),
         ),
       ],
-    );
+    );*/
   }
 
   Widget _buildProfileCard(SwipeController controller, UserData profile) {
@@ -120,7 +153,7 @@ class SwipeCardScreen extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        Get.toNamed(AppRoutes.ewProfileDetail, arguments: {'id': profile.id, "isMy": false})?.then((value) {
+        Get.toNamed(AppRoutes.ewProfileDetail, arguments: {'id': profile.id, "isMy": false,"fromChat":false})?.then((value) {
           controller.fetchProfiles();
         });
       },
@@ -155,7 +188,7 @@ class SwipeCardScreen extends StatelessWidget {
               Positioned(
                 top: 20,
                 left: 20,
-                child: _badge("${profile.distnace!} km", Icons.location_on_outlined),
+                child: _badge("${profile.distnace!} mi", Icons.location_on_outlined),
               ),
 
               // --- ⚪ NAME & INFO (Glassmorphism) ---
@@ -310,7 +343,7 @@ class SwipeCardScreen extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        Get.toNamed(AppRoutes.ewProfileDetail, arguments: {'id': user.id, "isMy": false})?.then((value) {
+        Get.toNamed(AppRoutes.ewProfileDetail, arguments: {'id': user.id, "isMy": false,"fromChat":false})?.then((value) {
           controller.fetchProfiles();
         });
       },
@@ -336,6 +369,16 @@ class SwipeCardScreen extends StatelessWidget {
                   ),
                 ),
               ),
+
+
+
+              Positioned(
+                top: 15,
+                left: 15,
+                child: _badge("${user.distnace ?? "0"} Miles", Icons.location_on),
+              ),
+
+
 
               // --- 🔵 OVERLAY CONTENT (Text + Buttons) ---
               Column(
