@@ -51,12 +51,12 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCUKVfKZrgntn6Ed-57gRtqNRRdKYsJ7ZA',
-    appId: '1:304833466102:ios:42c4eca53a016f528be6d7',
-    messagingSenderId: '304833466102',
-    projectId: 'invoice-generator-9a1a5',
-    storageBucket: 'invoice-generator-9a1a5.firebasestorage.app',
-    iosBundleId: 'com.example.pdfCreation',
+    apiKey: 'AIzaSyB_JAC-K6fV7EYT9_06x1ow-HHcY9GozNg',
+    appId: '1:382007031902:ios:4d3a307169c03456501ccf',
+    messagingSenderId: '382007031902',
+    projectId: 'out2day-d9410',
+    storageBucket: 'out2day-d9410.firebasestorage.app',
+    iosBundleId: 'com.app.out2do',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
