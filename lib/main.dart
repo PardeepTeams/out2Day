@@ -34,7 +34,7 @@ void main() async {
 
 
 
- /* if (!kIsWeb) {
+  if (!kIsWeb) {
     await askNotificationPermission();
     await _initializeNotifications();
 
@@ -49,13 +49,13 @@ void main() async {
     if (initialMessage != null) {
       pendingNotificationPayload = jsonEncode(initialMessage.data);
     }
-   *//* await _checkForNotificationLaunch((payload) {
+    await _checkForNotificationLaunch((payload) {
       pendingNotificationPayload = payload;
     });
-    final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
-    if (initialMessage != null) {
+  //  final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+    /*if (initialMessage != null) {
       pendingNotificationPayload = jsonEncode(initialMessage.data);
-    }*//*
+    }*/
   } else {
     await askNotificationPermissionWeb();
   }
@@ -80,7 +80,7 @@ void main() async {
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
     debugPrint("Background/Terminated Notification Click: ${message.data}");
     manageNotificationClick(jsonEncode(message.data));
-  });*/
+  });
 
 /*  if (pendingPayload != null && (pendingPayload ?? "").isNotEmpty) {
     // Delay so that navigation system is ready

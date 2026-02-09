@@ -28,7 +28,7 @@ class ProfileListCard extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         Get.toNamed(AppRoutes.ewProfileDetail, arguments: {'id': profile.id, "isMy": false,"fromChat":false})?.then((value) {
-          controller.fetchProfiles();
+          controller.fetchProfiles(false);
         });
       },
       child: Container(

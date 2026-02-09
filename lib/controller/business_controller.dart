@@ -18,12 +18,13 @@ class BusinessController extends GetxController {
 
   final searchCtrl = TextEditingController();
   final searchAllCtrl = TextEditingController();
-  var isLoading = false.obs;
+  var isLoading = true.obs;
 
   @override
   void onInit() {
     super.onInit();
  //   loadBusinesses();
+  //  loadMyBusiness();
 
     searchCtrl.addListener(() {
 
@@ -37,7 +38,7 @@ class BusinessController extends GetxController {
 
   }
 
-  void loadBusinesses() async {
+  Future<void> loadBusinesses(bool isShow) async {
    /* allBusinesses.assignAll([
       BusinessModel(
         id: 1,
@@ -97,9 +98,12 @@ class BusinessController extends GetxController {
       ),
     ]);
     filteredBusinesses.assignAll(allBusinesses);*/
-    allBusinesses.clear();
+  //  allBusinesses.clear();
     try {
-      isLoading.value = true;
+      if(isShow){
+        isLoading.value = true;
+      }
+
       BusinessResponseModel response = await ApiService().fetchAllBusinesses();
 
       if (response.status == 1 && response.allBusinesses != null) {
@@ -119,8 +123,8 @@ class BusinessController extends GetxController {
 
   }
 
-  void loadMyBusiness() async {
-    myBusinesses.clear();
+  Future<void> loadMyBusiness(bool isShow) async {
+  //  myBusinesses.clear();
 /*    myBusinesses.assignAll([
       BusinessModel(
         id: 1,
@@ -181,7 +185,9 @@ class BusinessController extends GetxController {
     ]);
     filteredMyBusinesses.assignAll(myBusinesses);*/
     try {
-      isLoading.value = true;
+      if(isShow){
+        isLoading.value = true;
+      }
       MyBusinessResponseModel response = await ApiService().fetcMyBusinesses();
 
       if (response.status == 1 && response.allBusinesses != null) {

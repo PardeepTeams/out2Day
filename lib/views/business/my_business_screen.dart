@@ -26,41 +26,49 @@ class MyBusinessesScreen extends StatelessWidget {
         children: [
           _searchBar(),
           Expanded(
-            child: Obx(
-              () {
-                if (controller.isLoading.value) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                      color: MyColors.baseColor,
-                    ),
-                  );
-                }
-
-                // 2. Empty List Check
-                if (controller.filteredMyBusinesses.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      "No business found",
-                      style: TextStyle(
-                        fontFamily: "medium",
-                        fontSize: 16,
-                        color: MyColors.greyText2,
+            child: RefreshIndicator(child:      Obx(
+                    () {
+                  if (controller.isLoading.value) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: MyColors.baseColor,
                       ),
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 90),
-                    itemCount: controller.filteredMyBusinesses.length,
-                    itemBuilder: (_, index) {
-                  bool isLast = false;
-                  if(controller.filteredMyBusinesses.length-1 == index){
-                    isLast = true;
+                    );
                   }
-                  return _myBusinessCard(controller.filteredMyBusinesses[index],isLast);
-                });
-                /*GridView.builder(
+
+                  // 2. Empty List Check
+                  // Empty List Check
+                  if (controller.filteredMyBusinesses.isEmpty) {
+                    // 🟢 3. Empty state mein pull-to-refresh chalane ke liye ListView zaroori hai
+                    return ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        SizedBox(height: Get.height * 0.3),
+                        const Center(
+                          child: Text(
+                            "No business found",
+                            style: TextStyle(
+                              fontFamily: "medium",
+                              fontSize: 16,
+                              color: MyColors.greyText2,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+
+                  return ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 90),
+                      itemCount: controller.filteredMyBusinesses.length,
+                      itemBuilder: (_, index) {
+                        bool isLast = false;
+                        if(controller.filteredMyBusinesses.length-1 == index){
+                          isLast = true;
+                        }
+                        return _myBusinessCard(controller.filteredMyBusinesses[index],isLast);
+                      });
+                  /*GridView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
                     itemCount: controller.filteredMyBusinesses.length,
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -78,8 +86,13 @@ class MyBusinessesScreen extends StatelessWidget {
                     }
 
                 );*/
-              }
-            ),
+                }
+            ), onRefresh:() async {
+              // 🟢 2. Controller ka fetch function call karein (Must be Future<void>)
+              await controller.loadMyBusiness(false);
+            },)
+            
+
           ),
         ],
       ),
@@ -89,7 +102,7 @@ class MyBusinessesScreen extends StatelessWidget {
         onPressed: () {
           Get.to(() => AddBusinessScreen(isEdit: false))?.then((value) {
             // Eh code ohdon chalega jadon user AddEditEventScreen ton wapis aayega
-            controller.loadMyBusiness();
+            controller.loadMyBusiness(false);
           });
         },
       ),
@@ -663,7 +676,7 @@ class MyBusinessesScreen extends StatelessWidget {
                               icon: Icons.edit,
                               onTap: () {
                                 Get.to(() => AddBusinessScreen(isEdit: true, model: business,))?.then((value) {
-                                  controller.loadMyBusiness();
+                                  controller.loadMyBusiness(false);
                                 });
                               },
                             ),

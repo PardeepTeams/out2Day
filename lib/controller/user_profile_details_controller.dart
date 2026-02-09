@@ -8,6 +8,7 @@ import '../routes/app_routes.dart';
 import '../utils/common_styles.dart';
 import '../utils/my_progress_bar.dart';
 import '../views/home/tabs/connect/widgets/match_dialog.dart';
+import '../views/report_user_screen.dart';
 
 
 class UserProfileDetailController extends GetxController {
@@ -136,7 +137,7 @@ class UserProfileDetailController extends GetxController {
                     }
                 );
                 if (Get.isRegistered<SwipeController>()) {
-                  Get.find<SwipeController>().fetchProfiles();
+                  Get.find<SwipeController>().fetchProfiles(false);
                 }
               },),
             barrierDismissible: false,
@@ -188,7 +189,7 @@ class UserProfileDetailController extends GetxController {
           }
       );
       if (Get.isRegistered<SwipeController>()) {
-        Get.find<SwipeController>().fetchProfiles();
+        Get.find<SwipeController>().fetchProfiles(false);
       }
     }
 
@@ -226,7 +227,10 @@ class UserProfileDetailController extends GetxController {
   }
 
   void reportUser() {
-    showCommonSnackbar(title:"Reported", message:"User has been reported");
+    Get.to(() => ReportUserScreen(
+      userName: name.value ?? "User", // User ka naam
+      userId: profileUserId.toString(),         // User ki ID
+    ));
   }
 
 }

@@ -23,7 +23,7 @@ class SwipeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchProfiles();
+    fetchProfiles(true);
   }
   void toggleView() async {
     isSwitching.value = true; // Loader Start
@@ -37,7 +37,7 @@ class SwipeController extends GetxController {
   }
 
 
-  void fetchProfiles() async {
+  Future<void> fetchProfiles(bool isShow) async {
     try {
       commonIndex.value = 0;
   /*    var staticUsers = [
@@ -78,11 +78,14 @@ class SwipeController extends GetxController {
             dob: "1999-12-12"
         ),
       ];*/
-      isLoading.value = true;
+      if(isShow){
+        isLoading.value = true;
+      }
+
       // Profiles vich static data assign kitta
     //  profiles.assignAll(staticUsers);
-      profiles.clear();
-      gridProfiles.clear();
+    /*  profiles.clear();
+      gridProfiles.clear();*/
   //    isLoading.value = true;
   //    profiles.assignAll(staticUsers);
       var users = await ApiService().fetchHomeUsers();
@@ -151,7 +154,7 @@ class SwipeController extends GetxController {
                    "setDefault":true
                 }
                 );
-                fetchProfiles();
+                fetchProfiles(false);
               },),
             barrierDismissible: false,
           );

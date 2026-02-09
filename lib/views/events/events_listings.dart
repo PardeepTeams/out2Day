@@ -25,8 +25,9 @@ class EventsListingScreen extends StatelessWidget {
       body: Column(
         children: [
           _searchBar(),
+
           Expanded(
-            child: Obx(() {
+            child: RefreshIndicator(child: Obx(() {
               if(controller.isLoading.value){
                 return Center(
                   child: CircularProgressIndicator(
@@ -56,7 +57,11 @@ class EventsListingScreen extends StatelessWidget {
               }
 
 
-            }),
+            }) , onRefresh: () async {
+              // 🟢 2. Controller ka method call karein (Dhyan rahe ye async ho)
+              await controller.loadEvents(false);
+            },)
+           ,
           ),
         ],
       ),

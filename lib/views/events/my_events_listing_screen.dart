@@ -37,12 +37,19 @@ class MyEventsScreen extends StatelessWidget {
             _searchBar(),
 
             Expanded(
-              child: controller.filteredEvents.isEmpty?
-              const Center(
-                child: Text(
-                  "No events found",
-                  style: TextStyle(fontFamily: "medium"),
-                ),
+              child: RefreshIndicator(child:    controller.filteredEvents.isEmpty?
+               ListView(
+                // 🟢 Khali list mein bhi pull trigger karne ke liye physics zaroori hai
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  SizedBox(height: Get.height * 0.3),
+                  const Center(
+                    child: Text(
+                      "No events found",
+                      style: TextStyle(fontFamily: "medium"),
+                    ),
+                  ),
+                ],
               ):
               ListView.builder(
                 padding: const EdgeInsets.all(16),
@@ -55,7 +62,13 @@ class MyEventsScreen extends StatelessWidget {
                   final event = controller.filteredEvents[index];
                   return _eventCard(event,index +1,isLast);
                 },
-              ),
+              ), onRefresh: () async {
+                // 🟢 Controller ka loading function call karein
+                await controller.loadMyEvents(false);
+              },)
+              
+              
+           ,
             ),
           ],
         );},
@@ -66,7 +79,7 @@ class MyEventsScreen extends StatelessWidget {
         onPressed: () {
           Get.to(() => AddEditEventScreen(isEdit: false))?.then((value) {
             // Eh code ohdon chalega jadon user AddEditEventScreen ton wapis aayega
-            controller.loadMyEvents();
+            controller.loadMyEvents(false);
           });
         },
       ),
@@ -209,7 +222,7 @@ class MyEventsScreen extends StatelessWidget {
                         controller.fillForm(event);
                         Get.to(() => AddEditEventScreen(isEdit: true, event: event,))?.then((value) {
                           // Eh code ohdon chalega jadon user AddEditEventScreen ton wapis aayega
-                          controller.loadMyEvents();
+                          controller.loadMyEvents(false);
                         });
                       },
                     ),

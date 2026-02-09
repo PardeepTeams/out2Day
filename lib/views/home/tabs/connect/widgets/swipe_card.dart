@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:Out2Do/models/user_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -46,7 +47,7 @@ class _SwipeCardState extends State<SwipeCard> {
         child: _card(rotation: dx / 300, isDragging: true),
       ),
       childWhenDragging: const SizedBox.shrink(),
-      child: _card(),
+      child: Platform.isIOS?_cardIos():_card(),
     );
   }
 
@@ -69,7 +70,7 @@ class _SwipeCardState extends State<SwipeCard> {
             // 1. MAIN CARD (InkWell ke sath)
             InkWell(
               onTap: () {
-               /* Get.dialog(
+                Get.dialog(
                   MatchDialog(profile: widget.profile, onKeepSwiping: () {
                     Get.back();
                   },
@@ -87,11 +88,11 @@ class _SwipeCardState extends State<SwipeCard> {
 
                     },),
                   barrierDismissible: false,
-                );*/
+                );
                 Get.toNamed(AppRoutes.ewProfileDetail,
                     arguments: {'id': widget.profile.id, "isMy": false, "fromChat": false})
                     ?.then((value) {
-                  widget.controller.fetchProfiles();
+                  widget.controller.fetchProfiles(false);
                 });
               },
               child: Container(
@@ -185,161 +186,120 @@ class _SwipeCardState extends State<SwipeCard> {
       ),
     );
   }
-/*  Widget _card({double rotation = 0, bool isDragging = false}) {
+  Widget _cardIos({double rotation = 0, bool isDragging = false}) {
+    // Screen ki total height se safe area nikaalein
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    // Card ki height adjust karein (isey thoda kam rakhein taaki buttons ke liye jagah bache)
+    double cardHeight = screenHeight * 0.65;
+    const double buttonSize = 95.0;
+    const double buttonOverflow = 45.0; // Jitna card se bahar dikhana hai
     return Transform.rotate(
       angle: rotation,
-      child: InkWell(
-        onTap: (){
-          Get.toNamed(AppRoutes.ewProfileDetail, arguments: {'id': widget.profile.id, "isMy": false,"fromChat":false})?.then((value) {
-            widget.controller.fetchProfiles();
-          });
-        },
-        child:
-      Stack(
-        alignment: Alignment.topCenter,
-        clipBehavior: Clip.none, // Buttons ko card ke niche nikalne ke liye zaroori hai
-        children: [
-          Container(
-            height: MediaQuery.of(context).size.height-300,
-            width: MediaQuery.of(context).size.width * 0.9,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(25),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(25),
-              child: Stack(
-                children: [
-                  /// --- BACKGROUND IMAGE ---
-                  Positioned.fill(
-                    child: CachedNetworkImage(
-                      imageUrl: widget.profile.additionalImages!.first, // Original High-Res Image
-                      width: double.infinity,
-                      height: double.infinity,
-                      fit: BoxFit.cover,
-                   // 🟢 Smooth transition ke liye durations set karein
-                      fadeInDuration: const Duration(milliseconds: 300),
-                      fadeOutDuration: const Duration(milliseconds: 300),
-                      // 🟢 Thumbnail placeholder: Jab tak original load ho rahi hai, ye dikhega
-                      progressIndicatorBuilder: (context, url, downloadProgress) {
-                        // Agar downloadProgress null hai (matlab cache se mil gayi), toh kuch mat dikhao
-                        if (downloadProgress.progress == null) return const SizedBox();
-
-                        // Agar download ho rahi hai (nhi hai cache mein), tab loader dikhao
-                        return const Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: MyColors.baseColor,
-                          ),
-                        );
-                      },
-
-                      // 🔴 Error handling: Agar original image na mile
-                      errorWidget: (context, url, error) => Container(
-                        color: Colors.grey[300],
-                        child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+      child: SizedBox(
+        // Parent ki height card + button ke aadhe hisse ke barabar rakhein
+        height: Platform.isIOS?cardHeight + (buttonSize / 2):(MediaQuery.of(context).size.height - 240) + buttonOverflow,
+        width: MediaQuery.of(context).size.width * 0.9,
+        child: Stack(
+          alignment: Alignment.topCenter,
+          clipBehavior: Clip.none, // Buttons ko allow karein bahar nikalne ke liye
+          children: [
+            // 1. MAIN CARD
+            InkWell(
+              onTap: () {
+                Get.toNamed(AppRoutes.ewProfileDetail,
+                    arguments: {'id': widget.profile.id, "isMy": false, "fromChat": false})
+                    ?.then((value) {
+                  widget.controller.fetchProfiles(false);
+                });
+              },
+              child: Container(
+                height: cardHeight, // Fixed height for card
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(25),
+                  child: Stack(
+                    children: [
+                      /// --- BACKGROUND IMAGE ---
+                      Positioned.fill(
+                        child: CachedNetworkImage(
+                          imageUrl: widget.profile.additionalImages!.first,
+                          fit: BoxFit.cover,
+                          fadeInDuration: const Duration(milliseconds: 300),
+                          errorWidget: (context, url, error) => const Icon(Icons.broken_image),
+                        ),
                       ),
-                    )
-                    *//*CachedNetworkImage(
-                      imageUrl: widget.profile.additionalImagesThumb!.first,
-                      fit: BoxFit.cover,
-                    )*//*,
-                  ),
 
-                  /// --- DISTANCE BADGE ---
-                  Positioned(
-                    top: 15,
-                    left: 15,
-                    child: _badge("${widget.profile.distnace ?? "0"} Miles", Icons.location_on),
-                  ),
+                      // ... Distance Badge Code ...
 
-                  /// --- GLASSMORPHISM TEXT OVERLAY ---
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(25),
-                        bottomRight: Radius.circular(25),
-                      ),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            border: Border.all(color: Colors.white.withOpacity(0.3)),
+                      /// --- GLASSMORPHISM TEXT OVERLAY ---
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            bottomLeft: Radius.circular(25),
+                            bottomRight: Radius.circular(25),
                           ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              semiboldTextWhite("${widget.profile.firstName!}, ${calculateAge(widget.profile.dob!).toString()}"),
-                              whiteRegularText(widget.profile.profession ?? ""),
-                              const SizedBox(height: 20),
-                            ],
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            child: Container(
+                              width: double.infinity,
+                              // Bottom padding badha di taaki text buttons ke peeche na chupe
+                              padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 50),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                border: Border.all(color: Colors.white.withOpacity(0.3)),
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  semiboldTextWhite("${widget.profile.firstName!}, ${calculateAge(widget.profile.dob!).toString()}"),
+                                  whiteRegularText(widget.profile.profession ?? ""),
+                                  const SizedBox(height: 5),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            /// --- 2. ACTION BUTTONS ---
+            Positioned(
+              // Card ke bottom edge se buttons ko center karein
+              top: cardHeight - (buttonSize / 2),
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _circularButton(
+                    "assets/dislike.png",
+                    Colors.black,
+                        () => widget.controller.cancelFromGrid(widget.profile),
+                  ),
+                  const SizedBox(width: 20),
+                  _circularButton(
+                    "assets/like.png",
+                    Colors.black,
+                        () => widget.controller.connectFromGrid(widget.profile),
                   ),
                 ],
               ),
             ),
-          ),
-
-          /// --- 2. ACTION BUTTONS (Overflowing Bottom) ---
-          Positioned(
-            bottom: -60, // Card ke niche half bahar nikalne ke liye
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _circularButton(
-                    "assets/dislike.png",
-                    Colors.black,
-                        () =>
-                            widget.controller.cancelFromGrid(widget.profile)
-
-                ),
-                // const SizedBox(width: 25),
-                _circularButton(
-                    "assets/like.png",
-                    Colors.black,
-                        () =>  widget.controller.connectFromGrid(widget.profile)
-
-                ),
-              ],
-            ),
-          ),
-        ],
-      )),
-    );
-  }*/
-
-  /// --- Helper for White Circular Buttons ---
-/*  Widget _actionButton({required IconData icon, required Color color, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 85, // Image ke mutabiq bada size
-        width: 85,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              spreadRadius: 2,
-              offset: const Offset(0, 5),
-            ),
           ],
         ),
-        child: Icon(icon, color: color, size: 35),
       ),
     );
-  }*/
+  }
 
   Widget _circularButton(String icon, Color color, VoidCallback onTap) {
     return Container(
@@ -375,7 +335,7 @@ class _SwipeCardState extends State<SwipeCard> {
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: MyColors.black2,
                 ),
               ),
             ],

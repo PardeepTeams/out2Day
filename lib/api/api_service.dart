@@ -20,6 +20,7 @@ import '../models/faq_model.dart';
 import '../models/my_events_model.dart';
 import '../models/my_matched_response.dart';
 import '../models/profession_model.dart';
+import '../models/report_reaso.dart';
 import '../models/safety_advice_response.dart';
 import '../models/user_model.dart';
 import 'package:get/get.dart';
@@ -927,7 +928,6 @@ class ApiService {
           StorageProvider.clearStorage();
           return 1;
         } else {
-          // CASE: Status 0 (Not Registered)
           return 0;
         }
       } else {
@@ -1503,7 +1503,7 @@ print("NotIntrestedResponse $responseData");
         if (responseData['status'] == 1) {
           return responseData; // Isme 'unread_users' key milegi
         } else {
-          _handleUnauthorized(responseData["message"]);
+        //  _handleUnauthorized(responseData["message"]);
           throw responseData['message'] ?? "Failed to fetch count";
         }
       } else {
@@ -1511,6 +1511,155 @@ print("NotIntrestedResponse $responseData");
       }
     } catch (e) {
       print("Unread API Error: $e");
+      rethrow;
+    }
+  }
+
+
+  Future<bool> reportUserApi({
+    required String reportedUserId,
+    required String reason,
+    required String description,
+  }) async {
+    // 1. Connection check karein
+    if (!await isConnected()) {
+      throw "Please check your internet connection.";
+    }
+
+    try {
+      final token = StorageProvider.getToken();
+      final userData = StorageProvider.getUserData();
+
+      if (token == null || userData == null) {
+        throw "Session expired. Please login again.";
+      }
+
+      // 2. API hit karein
+      final response = await http.post(
+        Uri.parse("$baseUrl/report-user"),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'user_id': userData.id.toString(), // Reporting person
+          'reported_user_id': reportedUserId, // Person being reported
+          'reason': reason,
+          'description': description,
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      var responseData = json.decode(response.body);
+      print("Report API Response: ${response.body}");
+
+      // 3. Response handle karein
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (responseData['status'] == 1 || responseData['status'] == 0) {
+          // Aapne kaha response status 0 hai, toh uske hisaab se check karein
+          return true;
+        } else {
+          _handleUnauthorized(responseData["message"]);
+          throw responseData['message'] ?? "Failed to report user.";
+        }
+      } else {
+        throw responseData['message'] ?? "Server Error: ${response.statusCode}";
+      }
+    } catch (e) {
+      print("Report API Error: $e");
+      rethrow;
+    }
+  }
+
+
+
+
+  Future<bool> readNotificationApi() async {
+    if (!await isConnected()) {
+      throw "Please check your internet connection.";
+    }
+
+    try {
+      final token = StorageProvider.getToken();
+      final userData = StorageProvider.getUserData();
+
+      if (token == null || userData == null) {
+        throw "Session expired. Please login again.";
+      }
+
+      // 2. API hit karein
+      final response = await http.post(
+        Uri.parse("$baseUrl/notification-status-update"),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'user_id': userData.id.toString(), // Reporting person
+          'status': "1", // Person being reported
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      var responseData = json.decode(response.body);
+      print("Read Notification API Response: ${response.body}");
+
+      // 3. Response handle karein
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (responseData['status'] == 1 || responseData['status'] == 0) {
+          // Aapne kaha response status 0 hai, toh uske hisaab se check karein
+          return true;
+        } else {
+          _handleUnauthorized(responseData["message"]);
+          throw responseData['message'] ?? "Failed to update notification status.";
+        }
+      } else {
+        throw responseData['message'] ?? "Server Error: ${response.statusCode}";
+      }
+    } catch (e) {
+      print("Report API Error: $e");
+      rethrow;
+    }
+  }
+
+  Future<List<ReportReason>> fetchReportReasons() async {
+    // 1. Connection check
+    if (!await isConnected()) {
+      throw "Please check your internet connection.";
+    }
+
+    try {
+      final token = StorageProvider.getToken();
+      if (token == null) {
+        throw "Session expired. Please login again.";
+      }
+
+      // 2. GET Request with Token
+      final response = await http.get(
+        Uri.parse("$baseUrl/get-report-reasons"),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      var responseData = json.decode(response.body);
+      print("Report Reasons Response: ${response.body}");
+
+      if (response.statusCode == 200) {
+        if (responseData['status'] == 1) {
+          // 3. Data list ko map karke Model mein convert karein
+          List<dynamic> data = responseData['data'];
+          return data.map((json) => ReportReason.fromJson(json)).toList();
+        } else {
+          _handleUnauthorized(responseData["message"]);
+          throw responseData['message'] ?? "Failed to load reasons";
+        }
+      } else {
+        throw responseData['message'] ?? "Server Error: ${response.statusCode}";
+      }
+    } catch (e) {
+      print("Error fetching report reasons: $e");
       rethrow;
     }
   }

@@ -2,56 +2,65 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../api/api_service.dart'; // Aapka API service
 import '../../utils/my_progress_bar.dart';
+import '../models/report_reaso.dart';
+import '../utils/common_styles.dart';
 
 class ReportController extends GetxController {
   var selectedReason = "".obs;
   final TextEditingController detailsController = TextEditingController();
-  var isLoading = false.obs;
+  var isLoading = true.obs;
 
-  final List<String> reportReasons = [
-    "Spam or Fraud",
-    "Inappropriate Content",
-    "Harassment or Bullying",
-    "Fake Profile",
-    "Underage User",
-    "Other"
-  ];
+  var reasonsList = <ReportReason>[].obs;
 
   void selectReason(String reason) {
     selectedReason.value = reason;
   }
 
+  @override
+  void onInit() {
+    super.onInit();
+    getReasons();
+  }
+
+  void getReasons() async {
+    try {
+      isLoading.value = true;
+      var data = await ApiService().fetchReportReasons();
+      reasonsList.assignAll(data);
+    } catch (e) {
+      showCommonSnackbar(title: "Error", message: e.toString());
+    } finally {
+      isLoading.value = false;
+    }
+  }
   Future<void> submitReport(String targetUserId) async {
     if (selectedReason.isEmpty) {
-      Get.snackbar("Error", "Please select a reason first",
-          snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
+      showCommonSnackbar(title: "Error", message: "Please select a reason first");
       return;
+    }else if(detailsController.text.isEmpty){
+      showCommonSnackbar(title: "Error", message: "Please enter a report reason");
     }
 
     Get.back();
-/*    try {
+    try {
       MyProgressBar.showLoadingDialog(context: Get.context!);
 
       // Assume aapke ApiService mein reportUser method hai
-      final response = await ApiService().reportUser(
-        targetId: targetUserId,
+      bool success = await ApiService().reportUserApi(
+        reportedUserId: targetUserId,
         reason: selectedReason.value,
         description: detailsController.text,
       );
 
       MyProgressBar.hideLoadingDialog(context: Get.context!);
 
-      if (response['status'] == 1) {
-        Get.back(); // Screen close
-        Get.snackbar("Success", "User has been reported successfully.",
-            snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.green, colorText: Colors.white);
-      } else {
-        Get.snackbar("Error", response['message'] ?? "Something went wrong");
+      if (success) {
+        Get.back(); // Screen close karein
       }
     } catch (e) {
       MyProgressBar.hideLoadingDialog(context: Get.context!);
       Get.snackbar("Error", "Failed to submit report: $e");
-    }*/
+    }
   }
 
   @override

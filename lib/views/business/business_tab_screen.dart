@@ -139,7 +139,7 @@ class _BusinessesTabScreenState extends State<BusinessesTabScreen> with SingleTi
     // 1. 🚀 First Time Load (By default 0 index)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (Get.isRegistered<BusinessController>()) {
-        Get.find<BusinessController>().loadBusinesses();
+        Get.find<BusinessController>().loadBusinesses(false);
       }
     });
 
@@ -147,10 +147,10 @@ class _BusinessesTabScreenState extends State<BusinessesTabScreen> with SingleTi
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         if (_tabController.index == 0) {
-          Get.find<BusinessController>().loadBusinesses();
+          Get.find<BusinessController>().loadBusinesses(false);
         } else {
           // My Events Controller register hona zaroori hai
-          Get.find<BusinessController>().loadMyBusiness();
+          Get.find<BusinessController>().loadMyBusiness(false);
         }
       }
     });

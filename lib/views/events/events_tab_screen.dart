@@ -34,7 +34,7 @@ class _EventsTabScreenState extends State<EventsTabScreen> with SingleTickerProv
     // 1. 🚀 First Time Load (By default 0 index)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (Get.isRegistered<EventsController>()) {
-        Get.find<EventsController>().loadEvents();
+        Get.find<EventsController>().loadEvents(false);
       }
     });
 
@@ -42,10 +42,10 @@ class _EventsTabScreenState extends State<EventsTabScreen> with SingleTickerProv
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         if (_tabController.index == 0) {
-          Get.find<EventsController>().loadEvents();
+          Get.find<EventsController>().loadEvents(false);
         } else {
           // My Events Controller register hona zaroori hai
-          Get.find<MyEventsController>().loadMyEvents();
+          Get.find<MyEventsController>().loadMyEvents(false);
         }
       }
     });

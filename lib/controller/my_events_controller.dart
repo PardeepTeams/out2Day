@@ -21,7 +21,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 
 class MyEventsController extends GetxController {
-  var isLoading = false.obs;
+  var isLoading = true.obs;
   RxList<EventModel> myEvents = <EventModel>[].obs;
   RxList<EventModel> filteredEvents = <EventModel>[].obs;
 
@@ -86,7 +86,7 @@ class MyEventsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-
+   // loadMyEvents();
     searchController.addListener(() {
       filterEvents(searchController.text);
     });
@@ -109,7 +109,7 @@ class MyEventsController extends GetxController {
     }
   }
 
-  void loadMyEvents() async {
+  Future<void> loadMyEvents(bool isShow) async {
   /*  myEvents.value = [
       EventModel(
           id: 1,
@@ -162,7 +162,9 @@ class MyEventsController extends GetxController {
     filteredEvents.assignAll(myEvents);*/
 
     try {
-      isLoading.value = true;
+      if(isShow){
+        isLoading.value = true;
+      }
       MyEventResponseModel response = await ApiService().fetcMyEvents();
 
       if (response.status == 1 && response.allEvents != null) {
@@ -174,6 +176,8 @@ class MyEventsController extends GetxController {
         showCommonSnackbar(title: "Error", message: response.message!);
       }
     } catch (e) {
+      myEvents.clear();
+      filteredEvents.assignAll(myEvents);
       isLoading.value = false;
       print("MyEventsError $e");
       showCommonSnackbar(title: "Error", message: e.toString());

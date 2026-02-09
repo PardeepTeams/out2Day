@@ -16,6 +16,7 @@ import '../models/messages_model.dart';
 import '../utils/common_styles.dart';
 import '../utils/my_progress_bar.dart';
 import 'firebase_status_controller.dart';
+import 'home_controller.dart';
 
 class ChatMessagesController extends GetxController {
  // final messages = <ChatMessage>[].obs;
@@ -424,6 +425,7 @@ class ChatMessagesController extends GetxController {
               .set(0);
         }
       });
+
     } catch (e) {
       debugPrint("Error getting my chat list : $e");
     }

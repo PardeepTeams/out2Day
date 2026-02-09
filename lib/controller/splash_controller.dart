@@ -56,14 +56,14 @@ class SplashController extends GetxController {
     _checkLogin();
   }
 
-  void _checkLogin() {
+  void _checkLogin() async {
     bool isLoggedIn = StorageProvider.isUserLoggedIn();
     if (isLoggedIn) {
     //  Get.offAllNamed(AppRoutes.home);
       if (pendingNotificationPayload != null) {
         // Step 1: Pehle Home pe jayein (Back stack ke liye)
         Get.offAllNamed(AppRoutes.home);
-
+        await Future.delayed(const Duration(milliseconds: 200));
         // Step 2: Phir notification redirect karein
         String payload = pendingNotificationPayload!;
         pendingNotificationPayload = null; // Clear it

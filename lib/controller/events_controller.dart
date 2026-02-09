@@ -7,7 +7,7 @@ import '../utils/common_styles.dart';
 class EventsController extends GetxController {
   RxList<EventModel> events = <EventModel>[].obs;
   RxList<EventModel> filteredEvents = <EventModel>[].obs;
-  var isLoading = false.obs;
+  var isLoading = true.obs;
   final TextEditingController searchController = TextEditingController();
 
   @override
@@ -21,7 +21,7 @@ class EventsController extends GetxController {
     });
   }
 
-  void loadEvents() async {
+  Future<void> loadEvents(bool isShow) async {
  /*   events.value = [
       EventModel(
         id: 1,
@@ -76,7 +76,10 @@ class EventsController extends GetxController {
 
 
     try {
-      isLoading.value = true;
+      if(isShow){
+        isLoading.value = true;
+      }
+
       EventResponseModel response = await ApiService().fetchUpcomingEvents();
 
       if (response.status == 1 && response.allEvents != null) {

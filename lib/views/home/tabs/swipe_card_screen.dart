@@ -30,7 +30,7 @@ class SwipeCardScreen extends StatelessWidget {
         controller.profiles.refresh();*/
           controller.toggleView();
         },),
-      body: Obx(() {
+      body: RefreshIndicator(child:   Obx(() {
         if (controller.isLoading.value || controller.isSwitching.value) {
           return const Center(child: CircularProgressIndicator(
             color: MyColors.baseColor,
@@ -41,7 +41,7 @@ class SwipeCardScreen extends StatelessWidget {
 
         if(controller.profiles.isEmpty || allSwiped){
           return Center(child: regularText(
-            "No Users found"
+              "No Users found"
           ),);
         }
         if(controller.isGridView.value){
@@ -60,11 +60,17 @@ class SwipeCardScreen extends StatelessWidget {
         );
 
       }),
+
+        onRefresh: () async {
+          // Yeh call tab hoga jab user niche pull karega
+          await controller.fetchProfiles(false);
+        },)
+    ,
     );
   }
 
 
-  Widget _buildSwipeLayout(SwipeController controller){
+/*  Widget _buildSwipeLayout(SwipeController controller){
     int currentIndex = controller.commonIndex.value;
     int totalProfiles = controller.profiles.length;
 
@@ -90,212 +96,52 @@ class SwipeCardScreen extends StatelessWidget {
               .toList(),
         ))
     );
-  /*  return Stack(
-      children: [
-        // 1. Swipeable Cards (Slightly more bottom padding for the buttons)
-        Column(
-          children: [
-            Expanded(
-              child: CardSwiper(
-                controller: controller.swiperController,
-                cardsCount: controller.profiles.length,
-                onSwipe: controller.onSwipe,
-                isLoop: false,
-                numberOfCardsDisplayed: controller.profiles.length > 3 ? 3 : controller.profiles.length,
-                backCardOffset: const Offset(0, 0),
-                padding: const EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    top: 10,
-                    bottom: 10 // Space for buttons to overlap
-                ),
-                cardBuilder: (context, index, h, v) {
-                  return _buildProfileCard(controller,controller.profiles[index]);
-                },
-              ),
-            ),
-            // Bottom empty space for navigation bar if needed
-            const SizedBox(height: 60),
-          ],
-        ),
-
-        // 2. Overlapping Action Buttons (Half on card, half below)
-        Positioned(
-          bottom: 5, // Adjust this value to control the "half-half" look
-          left: 0,
-          right: 0,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _circularButton(
-                  "assets/dislike.png",
-                  Colors.black,
-                      () => controller.swiperController.swipe(CardSwiperDirection.left)
-              ),
-              // const SizedBox(width: 25),
-              _circularButton(
-                  "assets/like.png",
-                  Colors.black,
-                      () => controller.swiperController.swipe(CardSwiperDirection.right)
-              ),
-            ],
-          ),
-        ),
-      ],
-    );*/
-  }
-
-  Widget _buildProfileCard(SwipeController controller, UserData profile) {
-    // Safe Image URLs
-    String mainImage =  (profile.additionalImages?.isNotEmpty == true ? profile.additionalImages![0] : "");
-    // Yahan thumbnail ka URL pass karein jo backend se aa raha hai
-    String thumbImage = profile.additionalImagesThumb![0] ?? "";
-
-    return InkWell(
-      onTap: () {
-        Get.toNamed(AppRoutes.ewProfileDetail, arguments: {'id': profile.id, "isMy": false,"fromChat":false})?.then((value) {
-          controller.fetchProfiles();
-        });
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(25),
-        ),
-        child: ClipRRect( // 👈 Zaroori hai taaki image corners round rahein
-          borderRadius: BorderRadius.circular(25),
-          child: Stack(
-            children: [
-              // --- 🟢 BACKGROUND IMAGE WITH CACHE & THUMBNAIL ---
-              Positioned.fill(
-                child: CachedNetworkImage(
-                  imageUrl: mainImage,
-                  fit: BoxFit.cover,
-                  // Jab tak high-res load na ho, backend wala thumbnail dikhao
-                  placeholder: (context, url) => Image.network(
-                    thumbImage,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.broken_image, size: 50, color: Colors.white),
-                  ),
-                ),
-              ),
-
-              // --- 🔵 DISTANCE BADGE ---
-              Positioned(
-                top: 20,
-                left: 20,
-                child: _badge("${profile.distnace!} mi", Icons.location_on_outlined),
-              ),
-
-              // --- ⚪ NAME & INFO (Glassmorphism) ---
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(25),
-                    bottomRight: Radius.circular(25),
-                  ),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        border: Border.all(color: Colors.white.withOpacity(0.3)),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          semiboldTextWhite("${profile.firstName!}, ${calculateAge(profile.dob!).toString()}"),
-                          whiteRegularText(profile.profession ?? ""),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-/*  Widget _buildProfileCard(SwipeController controller,UserData profile) {
-    return InkWell(
-      onTap: (){
-        Get.toNamed(AppRoutes.ewProfileDetail,arguments: {'id': profile.id, "isMy":false})?.then((value) {
-          controller.fetchProfiles();
-        });
-      },
-      child:Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(25),
-        image: DecorationImage(
-          image: NetworkImage(profile.profile?? profile.additionalImages![0]),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Stack(
-        children: [
-          // Distance Badge
-          Positioned(
-            top: 20, left: 20,
-            child: _badge("${profile.distnace!} km", Icons.location_on_outlined),
-          ),
-
-          // Name & Info (Glassmorphism)
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 0, 0, 0), // Padding adjusted for buttons
-              child: ClipRRect(
-                borderRadius: BorderRadius.only(bottomLeft:Radius.circular(25), bottomRight: Radius.circular(25)),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.only(bottomLeft:Radius.circular(20), bottomRight: Radius.circular(20)),
-                      border: Border.all(color: MyColors.white.withOpacity(0.3)),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        semiboldTextWhite("${profile.firstName!} , ${calculateAge(profile.dob!).toString()}"),
-                        whiteRegularText(profile.profession!,),
-                        SizedBox(
-                          height: 20,
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    ));
   }*/
 
-  Widget _circularButton(String icon, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 95,
-        width: 95,
-        child: Image.asset(icon),
-      ),
+  Widget _buildSwipeLayout(SwipeController controller) {
+    int currentIndex = controller.commonIndex.value;
+    int totalProfiles = controller.profiles.length;
+
+    // Kitne cards stack mein ek saath dikhane hain (e.g., 5 cards)
+    int displayLimit = 1;
+    int endIndex = (currentIndex + displayLimit) < totalProfiles
+        ? currentIndex + displayLimit
+        : totalProfiles;
+
+    // Sirf zaroori profiles ki sublist nikaalein
+    List<UserData> visibleProfiles = controller.profiles.sublist(currentIndex, endIndex);
+    return LayoutBuilder( // LayoutBuilder se hume available height mil jayegi
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          // 🟢 Ye physics Pull-to-Refresh ke liye sabse zaroori hai
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Container(
+            // Screen ki poori height dena zaroori hai taaki pull trigger ho sake
+            height: constraints.maxHeight,
+            width: constraints.maxWidth,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Ek invisible placeholder taaki empty area mein bhi pull kaam kare
+                const SizedBox.expand(),
+
+                ...visibleProfiles
+                    .asMap()
+                    .entries
+                    .map((entry) {
+                  // Sirf current index ke aas-paas ke cards dikhayein performance ke liye
+               //   if (entry.key < controller.commonIndex.value) return const SizedBox();
+
+                  return SwipeCard(
+                    profile: entry.value,
+                    controller: controller,
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -344,7 +190,7 @@ class SwipeCardScreen extends StatelessWidget {
     return InkWell(
       onTap: () {
         Get.toNamed(AppRoutes.ewProfileDetail, arguments: {'id': user.id, "isMy": false,"fromChat":false})?.then((value) {
-          controller.fetchProfiles();
+          controller.fetchProfiles(false);
         });
       },
       child: ClipRRect( // Taaki image corners round rahein
@@ -441,87 +287,4 @@ class SwipeCardScreen extends StatelessWidget {
       ),
     );
   }
-/*  Widget _userCard(SwipeController controller,UserData user,int index) {
-    return InkWell(
-      onTap: (){
-        Get.toNamed(AppRoutes.ewProfileDetail,arguments: {'id': user.id,"isMy":false})?.then((value) {
-           controller.fetchProfiles();
-        });
-      },
-      child:
-      Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        image: DecorationImage(
-          image: NetworkImage(user.profile??user.additionalImages![0]),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          // 1. Name aur Age (Gradient backdrop de naal)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-                colors: [Colors.black.withOpacity(0.8), Colors.transparent],
-              ),
-            ),
-            child: Text(
-              "${user.firstName} , ${calculateAge(user.dob!).toString()}",
-              style: const TextStyle(
-                color: MyColors.white,
-                fontFamily: "semibold",
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-              ),
-            ),
-          ),
-
-          // 2. Action Buttons (Blur Effect)
-          ClipRRect(
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(20),
-              bottomRight: Radius.circular(20),
-            ),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), // Glassmorphism effect
-              child: Container(
-                height: 50,
-                color: Colors.white.withOpacity(0.2), // Light transparent color
-                child: Row(
-                  children: [
-                    // Dislike Button
-                    Expanded(
-                      child: IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white),
-                        onPressed: () {
-                          controller.cancelFromGrid(user);
-                        },
-                      ),
-                    ),
-                    // Vertical Divider
-                    Container(width: 1, height: 25, color: Colors.white30),
-                    // Like Button
-                    Expanded(
-                      child: IconButton(
-                        icon: const Icon(Icons.thumb_up, color: Colors.white),
-                        onPressed: () {
-                          controller.connectFromGrid(user);
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    ));
-  }*/
 }

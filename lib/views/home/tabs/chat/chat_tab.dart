@@ -23,7 +23,7 @@ class ChatTab extends StatelessWidget {
     return Scaffold(
       backgroundColor: MyColors.white,
       appBar: CommonHomeAppBar(),
-      body: Obx((){
+      body:RefreshIndicator(child:    Obx((){
         if(controller.isLoading.value){
           return Center(
             child: CircularProgressIndicator(
@@ -31,7 +31,7 @@ class ChatTab extends StatelessWidget {
             ),
           );
         }
-       return Column(
+        return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             controller.matchesList.isNotEmpty?
@@ -56,7 +56,7 @@ class ChatTab extends StatelessWidget {
                 },
               ),
             ):SizedBox(),
-           // controller.matchesList.isNotEmpty?
+            // controller.matchesList.isNotEmpty?
             const SizedBox(height: 12),//:SizedBox(),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -91,7 +91,11 @@ class ChatTab extends StatelessWidget {
             }))
           ],
         );
-      })
+      }), onRefresh:() async {
+        await controller.getAllData(false);
+      },
+      )
+
 
       ,
     );

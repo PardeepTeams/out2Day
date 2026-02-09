@@ -20,7 +20,7 @@ class AllBusinessesScreen extends StatelessWidget {
         children: [
           _searchBar(),
           Expanded(
-            child: Obx(() {
+            child: RefreshIndicator(child:  Obx(() {
               // 1. Loading State Check
               if (controller.isLoading.value) {
                 return const Center(
@@ -31,28 +31,41 @@ class AllBusinessesScreen extends StatelessWidget {
               }
 
               // 2. Empty List Check
+              // Empty List Check
               if (controller.filteredBusinesses.isEmpty) {
-                return const Center(
-                  child: Text(
-                    "No business found",
-                    style: TextStyle(
-                      fontFamily: "medium",
-                      fontSize: 16,
-                      color: MyColors.greyText2,
+                // 🟢 3. Empty state mein pull-to-refresh chalane ke liye ListView zaroori hai
+                return ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    SizedBox(height: Get.height * 0.3),
+                    const Center(
+                      child: Text(
+                        "No business found",
+                        style: TextStyle(
+                          fontFamily: "medium",
+                          fontSize: 16,
+                          color: MyColors.greyText2,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 );
               }
 
               // 3. Data Available (Grid View)
               return ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                   itemCount:controller.filteredBusinesses.length ,
+                  itemCount:controller.filteredBusinesses.length ,
                   itemBuilder: (_, index) {
-                bool isLast = index == controller.filteredBusinesses.length - 1;
-                return _businessCard(controller.filteredBusinesses[index], isLast);
-              } );
-            }),
+                    bool isLast = index == controller.filteredBusinesses.length - 1;
+                    return _businessCard(controller.filteredBusinesses[index], isLast);
+                  } );
+            }), onRefresh: () async {
+              // 🟢 2. Controller ka fetch function call karein (Must be Future<void>)
+              await controller.loadBusinesses(false);
+            },)
+            
+           ,
           ),
         ],
       ),

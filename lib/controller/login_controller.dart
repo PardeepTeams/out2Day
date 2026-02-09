@@ -287,18 +287,20 @@ class LoginController extends GetxController {
             });
           },
           codeAutoRetrievalTimeout: (String verId) {
-            verificationId = verId;
-            MyProgressBar.hideLoadingDialog(context: context);
-            verificationId = verId;
+            if(verId!=null){
+              MyProgressBar.hideLoadingDialog(context: context);
+              verificationId = verId;
 
-            Get.toNamed(AppRoutes.otp, arguments: {
-              'phone': phoneController.text.trim(),
-              'countryCode': countryCode.value,
-              'verificationId': verificationId,
-              'isWeb': false,
-              "deviceToken":deviceToken,
-              'confirmationResult': null, // Web placeholder
-            });
+              Get.toNamed(AppRoutes.otp, arguments: {
+                'phone': phoneController.text.trim(),
+                'countryCode': countryCode.value,
+                'verificationId': verificationId,
+                'isWeb': false,
+                "deviceToken":deviceToken,
+                'confirmationResult': null, // Web placeholder
+              });
+            }
+
           },
         );
       }

@@ -49,11 +49,11 @@ class ChatController extends GetxController {
   void onInit() {
     super.onInit();
     userDetails.value = StorageProvider.getUserData();
-    getAllData();
+    getAllData(true);
   }
 
-  void getAllData(){
-    loadChats();
+  Future<void> getAllData(bool isShow)async {
+    loadChats(isShow);
   }
 
  /* void getMyMatches() async {
@@ -70,7 +70,7 @@ class ChatController extends GetxController {
 
 
   /// Load mock / API chats
-  void loadChats() async{
+  void loadChats(bool isShow) async{
   /*  chats.assignAll([
       ChatUser(
         name: "Aanya",
@@ -97,7 +97,10 @@ class ChatController extends GetxController {
     ]);*/
 
     try {
-      isLoading.value = true;
+      if(isShow){
+        isLoading.value = true;
+      }
+
 
       // API hit
       ChatResponseModel response = await ApiService().fetchFirebaseChats();
@@ -148,7 +151,7 @@ class ChatController extends GetxController {
       'sender': StorageProvider.getUserData()!.toJson(),
       'receiver':receiver.toJson(),
     })?.then((value) {
-       loadChats();
+       loadChats(false);
        refreshHomeBadge();
 
       if (value == true) {
@@ -179,7 +182,7 @@ class ChatController extends GetxController {
         'receiver': data.toJson(),
         "setDefault":true
       },)?.then((value) {
-      loadChats();
+      loadChats(false);
       refreshHomeBadge();
       if (value == true) {
         print("Data updated, refreshing UI...");

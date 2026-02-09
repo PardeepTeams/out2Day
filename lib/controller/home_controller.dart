@@ -24,8 +24,21 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    updateUnreadBadge();
-    _timer = Timer.periodic(Duration(seconds: 30), (timer) {
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    // Pehle check karein agar timer chal raha hai toh cancel karein
+    _timer?.cancel();
+
+    updateUnreadBadge(); // Pehli baar call
+
+    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
       updateUnreadBadge();
     });
   }
@@ -52,21 +65,21 @@ class HomeController extends GetxController {
     // Har baar tab change hone par refresh trigger karein
     if (index == 0) {
       if (Get.isRegistered<SwipeController>()) {
-        Get.find<SwipeController>().fetchProfiles();
+        Get.find<SwipeController>().fetchProfiles(false);
       }
     }
     else if (index == 1) {
       // Agar ConnectController registered hai, toh uska data refresh karo
-      if (Get.isRegistered<EventsController>()) {
+    /*  if (Get.isRegistered<EventsController>()) {
         Get.find<EventsController>().loadEvents();
-      }
+      }*/
     }else if(index ==2){
-      if (Get.isRegistered<BusinessController>()) {
+   /*   if (Get.isRegistered<BusinessController>()) {
         Get.find<BusinessController>().loadBusinesses();
-      }
+      }*/
     }else if(index ==3){
       if (Get.isRegistered<ChatController>()) {
-        Get.find<ChatController>().getAllData();
+        Get.find<ChatController>().getAllData(false);
       }
     }
   }

@@ -171,8 +171,7 @@ class ProfileSettingsController extends GetxController {
     confirmText: AppStrings.delete,
     isDeleteAction: true,
     onConfirm: () async {
-      Get.offAllNamed(AppRoutes.login);
-   /*   try{
+      try{
         MyProgressBar.showLoadingDialog(context: context);
         int status = await ApiService().removeAccountApi();
         if (status == 1) {
@@ -184,7 +183,7 @@ class ProfileSettingsController extends GetxController {
       }catch(e){
         MyProgressBar.hideLoadingDialog(context: context);
         Get.snackbar("Error", e.toString());
-      }*/
+      }
     },
   );
   void businessListing() => Get.toNamed(AppRoutes.business,
